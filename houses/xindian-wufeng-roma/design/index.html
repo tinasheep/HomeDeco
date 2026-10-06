@@ -1,0 +1,267 @@
+<title>羅馬山莊 規劃圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: drafting sheet — title block on top, plan and 3D side by side, keyed notes below */
+:root{
+  --paper:#F2F3F0; --sheet:#FFFFFF; --ink:#1E2A32; --muted:#5E6B72; --line:#C9CFD0;
+  --accent:#2C6E6A; --accent-soft:#D6E8E5; --wood:#D2B48A; --tile:#C9D0D2; --stair:#E3E5E2; --wall:#1E2A32;
+  --font-display:"Noto Serif TC", "Songti TC", serif;
+  --font-body:"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-data:"IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#151B1F; --sheet:#1C2429; --ink:#E4E9EA; --muted:#9AA7AC; --line:#34414A;
+  --accent:#6FB5AE; --accent-soft:#21403E; --wood:#8C7253; --tile:#4A565B; --stair:#262F35; --wall:#DDE3E4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#151B1F; --sheet:#1C2429; --ink:#E4E9EA; --muted:#9AA7AC; --line:#34414A;
+  --accent:#6FB5AE; --accent-soft:#21403E; --wood:#8C7253; --tile:#4A565B; --stair:#262F35; --wall:#DDE3E4; color-scheme:dark}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.65}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:24px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+h1{font-family:var(--font-display);font-size:clamp(26px,4vw,36px);margin:0;line-height:1.2;text-wrap:balance}
+.facts{font-family:var(--font-data);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 16px;font-variant-numeric:tabular-nums}
+.note{font-size:13px;color:var(--muted);margin:0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls span{font-size:12px;letter-spacing:.08em;color:var(--muted);margin-right:4px}
+button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--sheet);color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--sheet)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px}
+@media (max-width:820px){.views{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sheet);border:1px solid var(--line);min-width:0;display:flex;flex-direction:column}
+.panel h2{font-size:12px;letter-spacing:.12em;font-weight:500;color:var(--muted);margin:0;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+#plan{width:100%;height:auto;display:block}
+#three{position:relative;flex:1;min-height:460px}
+#three canvas{display:block}
+.lbl{font-family:var(--font-body);font-size:12px;color:var(--ink);background:color-mix(in srgb,var(--sheet) 80%,transparent);padding:1px 6px;border-radius:3px;pointer-events:none;white-space:nowrap}
+.hint{font-size:12px;color:var(--muted);padding:8px 14px;border-top:1px solid var(--line)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px 28px;margin:0;padding:0;list-style:none}
+.keys li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.keys b{display:block;font-weight:700}
+.badge{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--sheet);font-family:var(--font-data);font-size:12px;display:grid;place-items:center;margin-top:2px}
+h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>羅馬山莊 退休宅規劃圖</h1>
+      <div class="facts"><span>新店區五峰路</span><span>建物 22.23 坪</span><span>主＋陽 18.89 坪 ≈ 62.4 m²</span><span>3F / 5F・有電梯</span><span>1 房 2 廳 1 衛</span></div>
+    </div>
+    <div class="controls" role="group" aria-label="客廳壁床">
+      <span>客廳壁床</span>
+      <button id="bed-closed" aria-pressed="true">平常（收起）</button>
+      <button id="bed-open" aria-pressed="false">家人留宿（放下）</button>
+    </div>
+  </header>
+
+  <p class="note">尺寸由好房網平面圖比例與「主建物＋陽台 18.89 坪」回推，誤差約 ±20 公分，房仲照片僅用來判斷門窗與設備位置。正式施工前需現場丈量。</p>
+
+  <div class="views">
+    <section class="panel" aria-label="平面配置圖">
+      <h2><span>平面配置圖</span><span style="font-family:var(--font-data)">1 格 = 1 m</span></h2>
+      <svg id="plan" role="img" aria-label="家具配置平面圖"></svg>
+    </section>
+    <section class="panel" aria-label="3D 示意">
+      <h2><span>3D 示意</span><span>牆高降低以便俯視</span></h2>
+      <div id="three"></div>
+      <div class="hint">拖曳旋轉・滾輪或雙指縮放・右鍵平移</div>
+    </section>
+  </div>
+
+  <section>
+    <h3>規劃重點</h3>
+    <ol class="keys" id="keys"></ol>
+  </section>
+</div>
+
+<script>
+// ---------- shared model (meters; x = east, y = south) ----------
+window.HOUSE = {
+  rooms: [
+    {n:"後陽台", r:[0,0,2.4,1.5], f:"tile"},
+    {n:"廚房", r:[0,1.5,2.4,3.9], f:"wood"},
+    {n:"臥室", r:[2.4,0,3.8,3.6], f:"wood"},
+    {n:"餐廳", r:[2.4,3.6,3.8,1.8], f:"wood"},
+    {n:"浴廁", r:[0,5.4,2.6,2.0], f:"tile"},
+    {n:"客廳", r:[2.6,5.4,3.6,5.1], f:"wood"},
+    {n:"前陽台・入口", r:[2.6,10.5,3.6,1.4], f:"tile"},
+  ],
+  stair: [0,7.4,2.6,4.5],
+  // walls: [x1,y1,x2,y2,type] type: w=full, s=window(sill), g=glass door, r=railing
+  walls: [
+    [0,0,2.4,0,"s"],[2.4,0,3.5,0,"w"],[3.5,0,5.1,0,"s"],[5.1,0,6.2,0,"w"],
+    [6.2,0,6.2,10.5,"w"],[6.2,10.5,6.2,11.9,"r"],[2.6,11.9,6.2,11.9,"r"],
+    [2.6,10.5,2.6,10.65,"w"],[2.6,11.55,2.6,11.9,"w"],
+    [0,0,0,7.4,"w"],[0,7.4,2.6,7.4,"w"],[2.6,7.4,2.6,10.5,"w"],
+    [0,1.5,0.2,1.5,"w"],[0.2,1.5,1.3,1.5,"s"],[1.3,1.5,1.55,1.5,"w"],[2.3,1.5,2.4,1.5,"w"],
+    [2.4,0,2.4,3.6,"w"],[3.3,3.6,6.2,3.6,"w"],
+    [0,5.4,1.6,5.4,"w"],[2.3,5.4,2.6,5.4,"w"],[2.6,5.4,2.6,7.4,"w"],
+    [2.6,10.5,2.85,10.5,"w"],[2.85,10.5,5.95,10.5,"g"],[5.95,10.5,6.2,10.5,"w"],
+  ],
+  doors: [ // hinge x,y, width, angle of closed leaf (deg), swing dir
+    {x:2.6,y:10.65,w:0.9,a:90,s:-1,label:"大門"},
+    {x:3.3,y:3.6,w:0.8,a:180,s:1},
+    {x:2.3,y:5.4,w:0.7,a:180,s:-1},
+    {x:1.55,y:1.5,w:0.75,a:0,s:-1},
+  ],
+  // furniture: [label, x, y, w, d, h, color, key?, mode?]  mode: closed/open/both
+  furn: [
+    ["雙人床 5×6.2尺",2.5,1.05,1.9,1.5,0.5,"#E9E4DA",2],
+    ["床頭櫃",2.5,0.5,0.45,0.45,0.55,"#B89A74"],
+    ["衣櫃",5.6,0.3,0.6,2.7,2.2,"#8FA9A4"],
+    ["流理台・水槽",0,1.75,0.6,1.6,0.88,"#CFC6B8"],
+    ["爐台",0,3.35,0.6,1.4,0.88,"#CFC6B8"],
+    ["冰箱",1.7,2.55,0.7,0.72,1.8,"#B8BEC2"],
+    ["洗衣機",0.1,0.1,0.65,0.65,0.85,"#E2E6E8",6],
+    ["餐桌",3.7,4.1,1.2,0.75,0.75,"#A9845A",5],
+    ["面盆",0.1,5.55,0.55,0.45,0.85,"#F4F5F5"],
+    ["馬桶",1.75,6.75,0.45,0.65,0.45,"#F4F5F5"],
+    ["無障礙淋浴區",0.1,6.2,1.25,1.1,0.03,"#9FC3C0",3],
+    ["電視櫃",2.62,7.6,0.42,1.8,0.5,"#6E5A46"],
+    ["壁床櫃 3.5尺",5.72,7.55,0.48,1.2,2.1,"#C7B79F",1,"closed"],
+    ["雙人沙發",4.9,7.4,0.82,1.6,0.8,"#7D8F8C",null,"closed"],
+    ["邊几",4.0,7.95,0.5,0.5,0.45,"#B89A74",null,"closed"],
+    ["壁床（放下）",3.92,7.62,2.0,1.06,0.5,"#E9E4DA",1,"open"],
+    ["壁床櫃",5.92,7.55,0.28,1.2,2.1,"#C7B79F",null,"open"],
+    ["鞋櫃＋穿鞋椅",3.7,11.5,1.3,0.38,1.0,"#B89A74",4],
+  ],
+  curtain: [[3.8,7.25,3.8,9.0],[3.8,7.25,6.2,7.25],[3.8,9.0,6.2,9.0]],
+  keys: [
+    ["客廳壁床＋布簾","3.5 尺壁床平常是沙發牆，媽媽或妹妹來時放下，床高約 48 公分好坐好起身。天花板預埋隱藏軌道，拉上布簾就是臨時客房。"],
+    ["主臥維持單純","雙人床靠內牆、整面衣櫃保留。床兩側留 60 公分以上通道，日後需要時可放助行器。"],
+    ["浴缸改無障礙淋浴","拆掉浴缸，改成無門檻淋浴區，地面截水溝加止滑磚，馬桶與淋浴旁預留扶手。"],
+    ["前陽台當玄關","入口在陽台，靠牆放鞋櫃與穿鞋椅，陽台與客廳之間的拉門門檻整平。"],
+    ["餐廳一張四人桌","廚房開放，餐桌放在餐廳中央，也兼工作桌。"],
+    ["洗衣機移到後陽台","廚房牆上外露的給排水管改接到後陽台，增建窗加強通風、搭配除濕。"],
+  ],
+};
+</script>
+
+<script>
+// ---------- 2D plan ----------
+(function(){
+  const H = window.HOUSE, S = 56, ox = 0.5, oy = 0.7; // px per meter, offsets in m
+  const W = (6.2+1.0)*S, Ht = (11.9+1.3)*S;
+  const svg = document.getElementById('plan');
+  svg.setAttribute('viewBox', `0 0 ${W} ${Ht}`);
+  const X = v => (v+ox)*S, Y = v => (v+oy)*S;
+  let mode = 'closed';
+  const css = n => `var(--${n})`;
+  function draw(){
+    let o = '';
+    o += `<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="${css('line')}" stroke-width="2"/></pattern></defs>`;
+    // grid
+    for(let x=0;x<=6;x++) o+=`<line x1="${X(x)}" y1="${Y(-0.3)}" x2="${X(x)}" y2="${Y(12.2)}" stroke="${css('line')}" stroke-width="0.5" stroke-dasharray="2 4"/>`;
+    for(let y=0;y<=12;y++) o+=`<line x1="${X(-0.3)}" y1="${Y(y)}" x2="${X(6.5)}" y2="${Y(y)}" stroke="${css('line')}" stroke-width="0.5" stroke-dasharray="2 4"/>`;
+    const st = H.stair;
+    o += `<rect x="${X(st[0])}" y="${Y(st[1])}" width="${st[2]*S}" height="${st[3]*S}" fill="url(#hatch)"/>`;
+    o += `<text x="${X(1.3)}" y="${Y(9.6)}" text-anchor="middle" font-size="14" fill="${css('muted')}">梯間・電梯</text>`;
+    H.rooms.forEach(r=>{ const [x,y,w,d]=r.r;
+      o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${css(r.f==='tile'?'tile':'wood')}" fill-opacity="${r.f==='tile'?0.45:0.28}"/>`; });
+    // curtain
+    if(mode==='open') H.curtain.forEach(c=>o+=`<line x1="${X(c[0])}" y1="${Y(c[1])}" x2="${X(c[2])}" y2="${Y(c[3])}" stroke="${css('accent')}" stroke-width="2.5" stroke-dasharray="6 4"/>`);
+    // furniture
+    H.furn.forEach(f=>{ const [n,x,y,w,d,h,c,k,m]=f; if(m && m!==mode) return;
+      o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8" rx="2"/>`;
+      if(w*S>40 && d*S>18) o+=`<text x="${X(x+w/2)}" y="${Y(y+d/2)+4}" text-anchor="middle" font-size="${w*S>80?11:9.5}" fill="#1E2A32">${n.length>8&&w*S<90?n.slice(0,5):n}</text>`;
+      if(k) o+=`<g><circle cx="${X(x)+2}" cy="${Y(y)+2}" r="9" fill="${css('accent')}"/><text x="${X(x)+2}" y="${Y(y)+6}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="${css('sheet')}">${k}</text></g>`;
+    });
+    // walls
+    H.walls.forEach(([x1,y1,x2,y2,t])=>{
+      const sw = t==='w'?6:t==='r'?3:3; const col = t==='g'||t==='s'?css('accent'):css('wall');
+      o+=`<line x1="${X(x1)}" y1="${Y(y1)}" x2="${X(x2)}" y2="${Y(y2)}" stroke="${col}" stroke-width="${sw}" stroke-linecap="square"/>`;
+      if(t==='s'||t==='g') o+=`<line x1="${X(x1)}" y1="${Y(y1)}" x2="${X(x2)}" y2="${Y(y2)}" stroke="${css('sheet')}" stroke-width="1"/>`;
+    });
+    // doors
+    H.doors.forEach(d=>{ const a=d.a*Math.PI/180, b=a+d.s*Math.PI/2;
+      const x1=d.x+Math.cos(a)*d.w, y1=d.y+Math.sin(a)*d.w, x2=d.x+Math.cos(b)*d.w, y2=d.y+Math.sin(b)*d.w;
+      o+=`<line x1="${X(d.x)}" y1="${Y(d.y)}" x2="${X(x2)}" y2="${Y(y2)}" stroke="${css('ink')}" stroke-width="1.5"/>`;
+      o+=`<path d="M${X(x2)} ${Y(y2)} A ${d.w*S} ${d.w*S} 0 0 ${d.s>0?0:1} ${X(x1)} ${Y(y1)}" fill="none" stroke="${css('muted')}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
+    });
+    // entry arrow
+    o+=`<path d="M${X(1.6)} ${Y(11.1)} L${X(2.45)} ${Y(11.1)}" stroke="${css('accent')}" stroke-width="3" marker-end="url(#arr)"/>`;
+    o+=`<defs><marker id="arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="${css('accent')}"/></marker></defs>`;
+    // room labels
+    const lab = {"後陽台":[1.2,0.45],"廚房":[1.15,4.95],"臥室":[4.3,3.05],"餐廳":[5.5,5.05],"浴廁":[1.45,5.95],"客廳":[4.4,10.0],"前陽台・入口":[5.2,11.3]};
+    Object.entries(lab).forEach(([n,[x,y]])=>o+=`<text x="${X(x)}" y="${Y(y)}" text-anchor="middle" font-size="15" font-weight="700" font-family="Noto Serif TC, serif" fill="${css('ink')}">${n}</text>`);
+    // dimensions
+    o+=`<g font-family="IBM Plex Mono, monospace" font-size="11" fill="${css('muted')}">`;
+    o+=`<line x1="${X(0)}" y1="${Y(-0.45)}" x2="${X(6.2)}" y2="${Y(-0.45)}" stroke="${css('muted')}" stroke-width="0.8"/><text x="${X(3.1)}" y="${Y(-0.55)}" text-anchor="middle">約 6.2 m</text>`;
+    o+=`<line x1="${X(6.5)}" y1="${Y(0)}" x2="${X(6.5)}" y2="${Y(11.9)}" stroke="${css('muted')}" stroke-width="0.8"/><text x="${X(6.68)}" y="${Y(6)}" transform="rotate(90 ${X(6.68)} ${Y(6)})" text-anchor="middle">約 11.9 m</text>`;
+    o+=`<text x="${X(4.4)}" y="${Y(6.4)}" text-anchor="middle">客廳寬約 3.6 m</text>`;
+    o+=`</g>`;
+    svg.innerHTML = o;
+  }
+  window.planSetMode = m => { mode = m; draw(); };
+  draw();
+  const keys = document.getElementById('keys');
+  H.keys.forEach(([t,d],i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="badge">${i+1}</span><div><b>${t}</b>${d}</div>`; keys.appendChild(li); });
+})();
+</script>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+const H = window.HOUSE, el = document.getElementById('three');
+const dark = () => getComputedStyle(document.documentElement).getPropertyValue('--sheet').trim();
+const scene = new THREE.Scene();
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled = true;
+el.appendChild(renderer.domElement);
+const labels = new CSS2DRenderer(); labels.domElement.style.cssText='position:absolute;top:0;left:0;pointer-events:none';
+el.appendChild(labels.domElement);
+const cam = new THREE.PerspectiveCamera(40,1,0.1,100);
+cam.position.set(12,13,17);
+const ctl = new OrbitControls(cam, renderer.domElement); ctl.target.set(3.1,0,6); ctl.enableDamping = true; ctl.maxPolarAngle = Math.PI*0.48;
+scene.add(new THREE.HemisphereLight(0xffffff,0x8a8f90,1.6));
+const sun = new THREE.DirectionalLight(0xffffff,1.6); sun.position.set(8,14,16); sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-10,right:10,top:10,bottom:-10}); scene.add(sun);
+const mat = c => new THREE.MeshStandardMaterial({color:c, roughness:0.85});
+const box = (x,y,w,d,h,c,z0=0,parent=scene) => { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(c)); m.position.set(x+w/2,z0+h/2,y+d/2); m.castShadow=m.receiveShadow=true; parent.add(m); return m; };
+// floors
+H.rooms.forEach(r=>{ const [x,y,w,d]=r.r; box(x,y,w,d,0.04,r.f==='tile'?0xC9CFD1:0xD9BC92,-0.04); });
+box(...H.stair,0.04,0xBFC3C2,-0.04);
+// walls (cutaway height)
+const WH=1.25, T=0.12;
+H.walls.forEach(([x1,y1,x2,y2,t])=>{
+  const len=Math.hypot(x2-x1,y2-y1), horiz = y1===y2;
+  const bx = horiz?Math.min(x1,x2):x1-T/2, by = horiz?y1-T/2:Math.min(y1,y2), w = horiz?len:T, d = horiz?T:len;
+  if(t==='w') box(bx,by,w,d,WH,0xF4F4F1);
+  else if(t==='s'){ box(bx,by,w,d,0.9,0xF4F4F1); const g=box(bx,by,w,d,WH-0.9,0x9CC9C4,0.9); g.material.transparent=true; g.material.opacity=0.45; }
+  else if(t==='g'){ const g=box(bx,by,w,d,WH,0x9CC9C4); g.material.transparent=true; g.material.opacity=0.35; }
+  else if(t==='r') box(bx,by,w,d,1.0,0x7E8A8C);
+});
+// furniture
+const groups = {closed:new THREE.Group(), open:new THREE.Group()};
+scene.add(groups.closed, groups.open); groups.open.visible=false;
+H.furn.forEach(([n,x,y,w,d,h,c,k,m])=>{ const p = m?groups[m]:scene; box(x,y,w,d,h,new THREE.Color(c).getHex(),0,p); });
+// curtain (open mode)
+H.curtain.forEach(([x1,y1,x2,y2])=>{ const horiz=y1===y2, len=Math.hypot(x2-x1,y2-y1);
+  const c=box(horiz?x1:x1-0.02, horiz?y1-0.02:y1, horiz?len:0.04, horiz?0.04:len, 2.2, 0xE8E1D3,0,groups.open);
+  c.material.transparent=true; c.material.opacity=0.55; });
+// labels
+const lab = {"後陽台":[1.2,0.75],"廚房":[1.2,4.4],"臥室":[4.2,3.0],"餐廳":[5.4,5.0],"浴廁":[1.3,6.0],"客廳":[4.3,9.9],"前陽台":[4.6,11.2],"梯間・電梯":[1.3,9.5]};
+Object.entries(lab).forEach(([n,[x,y]])=>{ const d=document.createElement('div'); d.className='lbl'; d.textContent=n; const o=new CSS2DObject(d); o.position.set(x,1.5,y); scene.add(o); });
+function bg(){ scene.background = new THREE.Color(dark()||'#ffffff'); }
+bg(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',bg);
+new MutationObserver(bg).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+function size(){ const w=el.clientWidth, h=Math.max(460, Math.min(640, w*0.85)); el.style.height=h+'px'; renderer.setSize(w,h); labels.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); }
+new ResizeObserver(size).observe(el); size();
+(function loop(){ requestAnimationFrame(loop); ctl.update(); renderer.render(scene,cam); labels.render(scene,cam); })();
+window.threeSetMode = m => { groups.open.visible = m==='open'; groups.closed.visible = m==='closed'; };
+</script>
+
+<script>
+(function(){
+  const bc=document.getElementById('bed-closed'), bo=document.getElementById('bed-open');
+  function set(m){ bc.setAttribute('aria-pressed', m==='closed'); bo.setAttribute('aria-pressed', m==='open');
+    window.planSetMode && window.planSetMode(m); window.threeSetMode && window.threeSetMode(m); }
+  bc.onclick=()=>set('closed'); bo.onclick=()=>set('open');
+})();
+</script>
