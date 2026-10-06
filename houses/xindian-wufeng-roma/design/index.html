@@ -108,9 +108,9 @@ window.HOUSE = {
   ],
   // furniture: [label, x, y, w, d, h, color, key?, mode?]  mode: closed/open/both
   furn: [
-    ["雙人床 5×6.2尺",2.5,1.05,1.9,1.5,0.5,"#E9E4DA",2],
-    ["床頭櫃",2.5,0.5,0.45,0.45,0.55,"#B89A74"],
-    ["衣櫃",5.6,0.3,0.6,2.7,2.2,"#8FA9A4"],
+    ["雙人床 5×6.2尺",2.5,0.7,1.9,1.5,0.5,"#E9E4DA",2],
+    ["床頭櫃",2.5,0.15,0.45,0.45,0.55,"#B89A74"],
+    ["衣櫃",3.4,2.98,2.75,0.6,2.2,"#8FA9A4"],
     ["流理台・水槽",0,1.75,0.6,1.6,0.88,"#CFC6B8"],
     ["爐台",0,3.35,0.6,1.4,0.88,"#CFC6B8"],
     ["冰箱",1.7,2.55,0.7,0.72,1.8,"#B8BEC2"],
@@ -184,7 +184,7 @@ window.HOUSE = {
     o+=`<path d="M${X(1.6)} ${Y(11.1)} L${X(2.45)} ${Y(11.1)}" stroke="${css('accent')}" stroke-width="3" marker-end="url(#arr)"/>`;
     o+=`<defs><marker id="arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="${css('accent')}"/></marker></defs>`;
     // room labels
-    const lab = {"後陽台":[1.2,0.45],"廚房":[1.15,4.95],"臥室":[4.3,3.05],"餐廳":[3.05,4.75],"浴廁":[1.45,5.95],"客廳":[4.4,10.0],"前陽台・入口":[5.2,11.3]};
+    const lab = {"後陽台":[1.2,0.45],"廚房":[1.15,4.95],"臥室":[5.3,1.9],"餐廳":[3.05,4.75],"浴廁":[1.45,5.95],"客廳":[4.4,10.0],"前陽台・入口":[5.2,11.3]};
     Object.entries(lab).forEach(([n,[x,y]])=>o+=`<text x="${X(x)}" y="${Y(y)}" text-anchor="middle" font-size="15" font-weight="700" font-family="Noto Serif TC, serif" fill="${css('ink')}">${n}</text>`);
     // dimensions
     o+=`<g font-family="IBM Plex Mono, monospace" font-size="11" fill="${css('muted')}">`;
@@ -260,7 +260,7 @@ H.curtain.forEach(([x1,y1,x2,y2])=>{ const horiz=y1===y2, len=Math.hypot(x2-x1,y
   const c=box(horiz?x1:x1-0.02, horiz?y1-0.02:y1, horiz?len:0.04, horiz?0.04:len, 2.2, 0xE8E1D3,0,groups.open);
   c.material.transparent=true; c.material.opacity=0.55; });
 // labels
-const lab = {"後陽台":[1.2,0.75],"廚房":[1.2,4.4],"臥室":[4.2,3.0],"餐廳":[3.05,4.6],"浴廁":[1.3,6.0],"客廳":[4.3,9.9],"前陽台":[4.6,11.2],"梯間・電梯":[1.3,9.5]};
+const lab = {"後陽台":[1.2,0.75],"廚房":[1.2,4.4],"臥室":[5.3,1.6],"餐廳":[3.05,4.6],"浴廁":[1.3,6.0],"客廳":[4.3,9.9],"前陽台":[4.6,11.2],"梯間・電梯":[1.3,9.5]};
 Object.entries(lab).forEach(([n,[x,y]])=>{ const d=document.createElement('div'); d.className='lbl'; d.textContent=n; const o=new CSS2DObject(d); o.position.set(x,1.5,y); scene.add(o); });
 function bg(){ scene.background = new THREE.Color(dark()||'#ffffff'); }
 bg(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',bg);
