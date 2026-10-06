@@ -82,3 +82,9 @@
 - [退休宅評估（人生規劃角度）](評估-退休宅.md)
 - [購屋與裝修資金準備](預算-購屋與裝修.md)
 - [配置平面圖與 3D 示意](design/index.html)（線上版：https://claude.ai/artifact/93gTTxz69S79brFmzyXqpx）
+
+## 追蹤文件（Claude Docs）
+
+- [貸款評估與月繳](https://claude.ai/code/artifact/a2f99cc1-6dfe-4a7f-a1f4-9b2090c0e90e)
+- [房子設計](https://claude.ai/code/artifact/fd6fa550-b010-4767-b21d-13828aaa856d)
+- [交屋後裝修與家具](https://claude.ai/code/artifact/7394211e-f361-4a3d-8ab9-30ce76fd1206)
