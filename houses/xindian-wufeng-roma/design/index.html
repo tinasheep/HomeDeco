@@ -134,7 +134,7 @@ window.HOUSE = {
     ["浴缸（保留）",0.05,6.6,1.5,0.75,0.55,"#E8EEF0",3],["扶手",2.5,6.8,0.04,0.6,0.04,"#8A9399",null,null,0.7],
     ["55吋電視（壁掛）",2.66,8.24,0.05,1.23,0.71,"#1E2226",null,null,0.75],
     ["橫掀壁床櫃 3.5尺",3.95,3.66,2.15,0.45,1.3,"#C7B79F",1,"closed"],
-    ["雙人沙發",5.35,8.05,0.82,1.6,0.8,"#7D8F8C"],
+    ["雙人沙發",5.35,8.05,0.82,1.6,0.8,"#9DA3A9"],
     ["邊几",5.45,9.78,0.6,0.6,0.42,"#B89A74"],
     ["壁床（放下）",4.02,3.85,2.0,1.06,0.5,"#E9E4DA",1,"open"],
     ["壁床櫃",3.95,3.66,2.15,0.2,1.3,"#C7B79F",null,"open"],
@@ -291,8 +291,26 @@ buildWalls(1.25);
 const furnRoot=new THREE.Group(); scene.add(furnRoot);
 const groups = {base:new THREE.Group(), closed:new THREE.Group(), open:new THREE.Group()};
 furnRoot.add(groups.base, groups.closed, groups.open); groups.open.visible=false;
-H.furn.forEach(([n,x,y,w,d,h,c,k,m,z0])=>{ const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,groups[m||'base']);
+H.furn.forEach(([n,x,y,w,d,h,c,k,m,z0])=>{ if(n==='雙人沙發'){ buildSofa(x,y,w,d,groups[m||'base']); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,groups[m||'base']);
   if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
+// fabric sofa: back against the wall on the +x side, seat facing -x
+function buildSofa(x,y,w,d,parent){
+  const g=new THREE.Group(), fab=new THREE.MeshStandardMaterial({color:0x9DA3A9, roughness:0.95}), wood=mat(0xC89B6D);
+  const rb=(bx,by,bz,sx,sy,sz,r,m)=>{ const geo=new THREE.BoxGeometry(sx,sy,sz,2,2,2); const o=new THREE.Mesh(geo,m); o.position.set(bx,by,bz); o.castShadow=o.receiveShadow=true; g.add(o); return o; };
+  const L=d, D=w, arm=0.13, legH=0.14;
+  // tapered wood legs
+  [[0.08,0.08],[0.08,L-0.08],[D-0.08,0.08],[D-0.08,L-0.08]].forEach(([lx,ly])=>{ const o=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.016,legH,10),wood); o.position.set(lx,legH/2,ly); o.rotation.z=(lx<D/2?-1:1)*0.12; o.castShadow=true; g.add(o); });
+  rb(D/2,legH+0.12,L/2,D,0.24,L,0,fab);                          // base frame
+  rb(0.04+(D-0.2)/2,legH+0.24+0.07,L/2,D-0.2,0.14,L-2*arm-0.02,0,fab); // long seat cushion
+  rb(D/2+0.02,legH+0.28,arm/2,D-0.04,0.32,arm,0,fab);            // arms
+  rb(D/2+0.02,legH+0.28,L-arm/2,D-0.04,0.32,arm,0,fab);
+  rb(D-0.08,legH+0.42,L/2,0.16,0.36,L-2*arm,0,fab);              // back frame
+  const half=(L-2*arm-0.04)/2;
+  [arm+0.01+half/2, L-arm-0.01-half/2].forEach(cy=>{ const o=rb(D-0.22,legH+0.58,cy,0.18,0.42,half,0,fab); o.rotation.z=-0.16;
+    [-0.2,0.2].forEach(dz=>{ const bt=new THREE.Mesh(new THREE.SphereGeometry(0.018,8,8),mat(0x7E858B)); bt.position.set(D-0.315,legH+0.62,cy+dz*half); g.add(bt); }); });
+  [arm+0.16, L-arm-0.16].forEach(cy=>{ const o=rb(D-0.36,legH+0.5,cy,0.12,0.3,0.3,0,fab); o.rotation.z=-0.25; o.rotation.x=(cy<L/2?1:-1)*0.12; }); // throw pillows
+  g.position.set(x,0,y); parent.add(g);
+}
 // 158 cm reference figure in dining room
 (function(){
   const g=new THREE.Group(), skin=mat(0xE8C4A0), top=mat(0x2C6E6A), pants=mat(0x3A4750);
