@@ -108,8 +108,8 @@ window.HOUSE = {
   ],
   // furniture: [label, x, y, w, d, h, color, key?, mode?]  mode: closed/open/both
   furn: [
-    ["雙人床 5×6.2尺",2.5,0.7,1.9,1.5,0.5,"#E9E4DA",2],
-    ["床頭櫃",2.5,0.15,0.45,0.45,0.55,"#B89A74"],
+    ["雙人床 5×6.2尺",4.22,0.65,1.9,1.5,0.5,"#E9E4DA",2],
+    ["床頭櫃",5.7,0.15,0.45,0.45,0.55,"#B89A74"],
     ["衣櫃",3.4,2.98,2.75,0.6,2.2,"#8FA9A4"],
     ["流理台・水槽",0,1.75,0.6,1.6,0.88,"#CFC6B8"],
     ["爐台",0,3.35,0.6,1.4,0.88,"#CFC6B8"],
@@ -130,7 +130,7 @@ window.HOUSE = {
   curtain: [[3.8,3.66,3.8,5.05],[3.8,5.05,6.2,5.05]],
   keys: [
     ["餐廳壁床＋布簾","3.5 尺橫掀壁床靠臥室外牆，收起時是 130 公分高的矮櫃，上面可放書或擺飾。媽媽或妹妹來時往外放下，只佔約 1.1 公尺深，床高約 48 公分好坐好起身。天花板預埋隱藏軌道，拉上布簾就是臨時客房，離浴廁也近。"],
-    ["主臥維持單純","雙人床靠內牆、整面衣櫃保留。床兩側留 60 公分以上通道，日後需要時可放助行器。"],
+    ["主臥維持單純","雙人床床頭靠外牆、遠離房門，整面衣櫃貼靠餐廳那面牆。床兩側留 60 公分以上通道，日後需要時可放助行器。"],
     ["浴缸改無障礙淋浴","拆掉浴缸，改成無門檻淋浴區，地面截水溝加止滑磚，馬桶與淋浴旁預留扶手。"],
     ["前陽台當玄關","入口在陽台，靠牆放鞋櫃與穿鞋椅，陽台與客廳之間的拉門門檻整平。"],
     ["餐桌靠客廳","餐桌往客廳側移，讓出壁床放下的空間，也兼工作桌。客廳一側整面留給沙發。"],
@@ -190,7 +190,7 @@ window.HOUSE = {
       o+=`<defs><marker id="arrN" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="${css('ink')}"/></marker></defs>`;
       o+=`<text x="${cx+nx*(L+16)}" y="${cy+ny*(L+16)+5}" text-anchor="middle" font-size="14" font-weight="700" fill="${css('ink')}">北</text>`; }
     // room labels
-    const lab = {"後陽台":[1.2,0.45],"廚房":[1.15,4.95],"臥室":[5.3,1.9],"餐廳":[3.05,4.75],"浴廁":[1.45,5.95],"客廳":[4.4,10.0],"前陽台・入口":[5.2,11.3]};
+    const lab = {"後陽台":[1.2,0.45],"廚房":[1.15,4.95],"臥室":[3.0,1.4],"餐廳":[3.05,4.75],"浴廁":[1.45,5.95],"客廳":[4.4,10.0],"前陽台・入口":[5.2,11.3]};
     Object.entries(lab).forEach(([n,[x,y]])=>o+=`<text x="${X(x)}" y="${Y(y)}" text-anchor="middle" font-size="15" font-weight="700" font-family="Noto Serif TC, serif" fill="${css('ink')}">${n}</text>`);
     // dimensions
     o+=`<g font-family="IBM Plex Mono, monospace" font-size="11" fill="${css('muted')}">`;
@@ -270,7 +270,7 @@ H.curtain.forEach(([x1,y1,x2,y2])=>{ const horiz=y1===y2, len=Math.hypot(x2-x1,y
   const arr=new THREE.ArrowHelper(new THREE.Vector3(nx,0,nz), new THREE.Vector3(cx-nx*0.6,0.05,cz-nz*0.6), 1.2, 0x1E2A32, 0.35, 0.25); scene.add(arr);
   const d=document.createElement('div'); d.className='lbl'; d.textContent='北'; const o=new CSS2DObject(d); o.position.set(cx+nx*0.9,0.3,cz+nz*0.9); scene.add(o); })();
 // labels
-const lab = {"後陽台":[1.2,0.75],"廚房":[1.2,4.4],"臥室":[5.3,1.6],"餐廳":[3.05,4.6],"浴廁":[1.3,6.0],"客廳":[4.3,9.9],"前陽台":[4.6,11.2],"梯間・電梯":[1.3,9.0]};
+const lab = {"後陽台":[1.2,0.75],"廚房":[1.2,4.4],"臥室":[3.0,1.4],"餐廳":[3.05,4.6],"浴廁":[1.3,6.0],"客廳":[4.3,9.9],"前陽台":[4.6,11.2],"梯間・電梯":[1.3,9.0]};
 Object.entries(lab).forEach(([n,[x,y]])=>{ const d=document.createElement('div'); d.className='lbl'; d.textContent=n; const o=new CSS2DObject(d); o.position.set(x,1.5,y); scene.add(o); });
 function bg(){ scene.background = new THREE.Color(dark()||'#ffffff'); }
 bg(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',bg);
