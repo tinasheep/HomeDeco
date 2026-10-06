@@ -81,4 +81,5 @@
 
 - [退休宅評估（人生規劃角度）](評估-退休宅.md)
 - [購屋與裝修資金準備](預算-購屋與裝修.md)
+- [交屋後裝修與家具追蹤](裝修與家具追蹤.md)
 - [配置平面圖與 3D 示意](design/index.html)（線上版：https://claude.ai/artifact/93gTTxz69S79brFmzyXqpx）
