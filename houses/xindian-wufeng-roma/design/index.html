@@ -162,6 +162,7 @@ window.HOUSE = {
     ["邊几",5.45,9.78,0.6,0.6,0.42,"#B89A74"],
     ["壁床（放下）",4.005,3.86,2.05,1.0,0.5,"#E9E4DA",1,"open"],
     ["壁床櫃",3.95,3.66,2.16,0.2,1.27,"#C7B79F",null,"open"],
+    ["人 158cm",5.0,5.41,0.3,0.48,1.58,"#2C6E6A"],
     ["鞋櫃＋穿鞋椅",3.7,11.5,1.3,0.38,1.0,"#B89A74",4],
     ["餐邊櫃",5.75,5.9,0.45,1.2,1.8,"#C8A27A"],
   ],
@@ -227,6 +228,7 @@ window.HOUSE = {
     window.LAYOUT.groups.forEach(g=>{ const v=window.LAYOUT.get(g.id);
      o+=`<g data-g="${g.id}" class="${g.fixed?'fx':'mv'}${g.id===sel?' sel':''}" transform="${tf(g,v)}">`;
      g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m]=H.furn[i]; if(m && m!==mode) return;
+      if(n==='人 158cm'){ o+=`<ellipse cx="${X(x+w/2)}" cy="${Y(y+d/2)}" rx="${w*S/2}" ry="${d*S/2}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8"/><circle cx="${X(x+w/2)}" cy="${Y(y+d/2)}" r="${0.11*S}" fill="#E8C4A0" stroke="${css('ink')}" stroke-width="0.6"/><text x="${X(x+w)+4}" y="${Y(y+d/2)+4}" font-size="10" fill="${css('ink')}">158</text>`; return; }
       o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8" rx="2"/>`;
       if(w*S>40 && d*S>18) o+=`<text x="${X(x+w/2)}" y="${Y(y+d/2)+4}" text-anchor="middle" font-size="${w*S>80?11:9.5}" fill="#1E2A32">${n.length>8&&w*S<90?n.slice(0,5):n}</text>`;
       else if(d*S>60 && w*S<40){ const tx=w*S<12?X(x+w)+12:X(x+w/2)-4, ty=Y(y+d/2); o+=`<text x="${tx}" y="${ty}" transform="rotate(90 ${tx} ${ty})" text-anchor="middle" font-size="10" fill="${css('ink')}">${n}</text>`; }
@@ -361,7 +363,7 @@ const LAY=window.LAYOUT, pivots={}, modal=[];
 LAY.groups.forEach(g=>{ const pv=new THREE.Group(), inner=new THREE.Group(); inner.position.set(-g.cx,0,-g.cy); pv.add(inner); furnRoot.add(pv);
   pv.userData.gid=g.id; pv.userData.fixed=g.fixed; pivots[g.id]=pv;
   g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m,z0]=H.furn[i]; const holder=new THREE.Group(); inner.add(holder); if(m){ holder.userData.m=m; modal.push(holder); holder.visible=m==='closed'; }
-    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
+    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } if(n==='人 158cm'){ buildPerson(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
     if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
   place(g.id, LAY.get(g.id)); });
 function place(id,v){ const g=LAY.groups.find(q=>q.id===id), pv=pivots[id]; pv.position.set(g.cx+v.dx,0,g.cy+v.dy); pv.rotation.y=-v.r*Math.PI/180; }
@@ -423,8 +425,8 @@ function buildSideboard(x,y,w,d,parent){
   b(D-uD+0.02,top0+uh/2,5*L/6,0.02,0.02,L/3-0.04,wood);                 // cubby shelf
   g.position.set(x,0,y); parent.add(g);
 }
-// 158 cm reference figure in dining room
-(function(){
+// 158 cm reference figure (movable like furniture)
+function buildPerson(x,y,w,d,parent){
   const g=new THREE.Group(), skin=mat(0xE8C4A0), top=mat(0x2C6E6A), pants=mat(0x3A4750);
   const cyl=(r1,r2,h,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,16),m);o.position.set(x,y,z);o.castShadow=true;g.add(o);return o;};
   cyl(0.06,0.05,0.74,pants,-0.08,0.37,0); cyl(0.06,0.05,0.74,pants,0.08,0.37,0);
@@ -434,9 +436,9 @@ function buildSideboard(x,y,w,d,parent){
   cyl(0.04,0.04,0.06,skin,0,1.33,0);
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.11,24,16),skin); head.scale.set(1,1.15,1); head.position.set(0,1.455,0); head.castShadow=true; g.add(head);
   // head top = 1.455 + 0.11*1.15 ≈ 1.58 m
-  g.position.set(5.15,0,5.65); g.rotation.y=-Math.PI/2; scene.add(g);
-  const d=document.createElement('div'); d.className='lbl'; d.textContent='158 cm'; const o=new CSS2DObject(d); o.position.set(5.15,1.75,5.65); scene.add(o);
-})();
+  g.position.set(x+w/2,0,y+d/2); g.rotation.y=-Math.PI/2; parent.add(g);
+  const el=document.createElement('div'); el.className='lbl'; el.textContent='158 cm'; const o=new CSS2DObject(el); o.position.set(0,1.75,0); g.add(o);
+}
 // curtain (open mode)
 H.curtain.forEach(([x1,y1,x2,y2])=>{ const horiz=y1===y2, len=Math.hypot(x2-x1,y2-y1);
   const c=box(horiz?x1:x1-0.02, horiz?y1-0.02:y1, horiz?len:0.04, horiz?0.04:len, 2.2, 0xE8E1D3,0,groups.open);
