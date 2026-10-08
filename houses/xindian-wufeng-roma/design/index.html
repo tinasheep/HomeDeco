@@ -54,6 +54,16 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
 .editbar select{font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--sheet);color:var(--ink);max-width:220px}
 .editbar .save-msg{font-size:12px;color:var(--accent);width:100%;text-align:right;min-height:1em}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.h2r{display:flex;gap:10px;align-items:center}
+.ph-btn{font-size:12px;padding:2px 10px}
+#plan g[data-ph]{cursor:pointer}
+#plan g[data-ph]:hover circle{fill:#A85F1A}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,14,16,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px}
+.lb.on{display:flex}
+.lb img{max-width:min(1024px,100%);max-height:calc(100vh - 120px);object-fit:contain;border-radius:4px;background:#000}
+.lb .cap{color:#fff;font-size:14px;text-align:center}
+.lb .nav{display:flex;gap:10px}
+.lb button{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.35)}
 </style>
 
 <div class="wrap">
@@ -85,7 +95,7 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
 
   <div class="views">
     <section class="panel" aria-label="平面配置圖">
-      <h2><span>平面配置圖</span><span style="font-family:var(--font-data)">1 格 = 1 m</span></h2>
+      <h2><span>平面配置圖</span><span class="h2r"><button id="ph-toggle" class="ph-btn" aria-pressed="true">📷 實景照片</button><span style="font-family:var(--font-data)">1 格 = 1 m</span></span></h2>
       <svg id="plan" role="img" aria-label="家具配置平面圖"></svg>
     </section>
     <section class="panel" aria-label="3D 示意">
@@ -168,6 +178,19 @@ window.HOUSE = {
     ["餐邊櫃",5.75,5.9,0.45,1.2,1.8,"#C8A27A"],
   ],
   curtain: [],
+  // listing photos: [file, caption, camera x, y, view direction deg (0=+x, 90=+y/front)]
+  photos: [
+    ["photos/01.jpg","客廳：看向前陽台",4.4,5.0,90],
+    ["photos/02.jpg","客廳：看向前陽台（另一角度）",2.75,4.2,75],
+    ["photos/03.jpg","客廳：電視牆與入口",5.8,9.0,185],
+    ["photos/04.jpg","餐廳：看向廚房與臥室門",4.8,7.5,235],
+    ["photos/05.jpg","廚房：流理台與爐具",1.9,4.9,225],
+    ["photos/06.jpg","廚房：看向後陽台",1.4,5.1,270],
+    ["photos/07.jpg","後陽台：鐵鋁窗增建",1.6,1.2,200],
+    ["photos/08.jpg","臥室：窗側",4.8,3.2,285],
+    ["photos/09.jpg","臥室：衣櫃側",2.9,1.8,0],
+    ["photos/10.jpg","浴廁",1.95,5.6,100],
+  ],
   keys: [
     ["餐廳壁床","3.5 尺橫掀壁床靠臥室外牆（型錄尺寸：寬 216、收起高 126.8、深 35 公分），收起時是矮櫃，上面可放書或擺飾。媽媽或妹妹來時往外放下，床長 205、離牆約 1.2 公尺深，床高約 48 公分好坐好起身，離浴廁也近。"],
     ["主臥維持單純","單人加大 3.5 尺床，床頭靠外牆、遠離房門；書桌放在靠後陽台那一側的角落，靠窗有早晨光線。整面衣櫃貼靠餐廳那面牆，床邊留 70 公分以上通道，日後需要時可放助行器。"],
@@ -268,10 +291,14 @@ window.HOUSE = {
     o+=`<line x1="${X(6.5)}" y1="${Y(0)}" x2="${X(6.5)}" y2="${Y(11.9)}" stroke="${css('muted')}" stroke-width="0.8"/><text x="${X(6.68)}" y="${Y(6)}" transform="rotate(90 ${X(6.68)} ${Y(6)})" text-anchor="middle">約 11.9 m</text>`;
     o+=`<text x="${X(4.4)}" y="${Y(7.1)}" text-anchor="middle">客廳寬約 3.6 m</text>`;
     o+=`</g>`;
+    // listing photo markers (camera spot + view cone)
+    if(window.showPhotos!==false) H.photos.forEach(([f,cap,x,y,a],i)=>{ const r=0.75*S, h=32*Math.PI/180, t=a*Math.PI/180, cx=X(x), cy=Y(y);
+      const p1=[cx+r*Math.cos(t-h),cy+r*Math.sin(t-h)], p2=[cx+r*Math.cos(t+h),cy+r*Math.sin(t+h)];
+      o+=`<g data-ph="${i}" role="button" aria-label="照片：${cap}"><path d="M${cx} ${cy}L${p1[0]} ${p1[1]}A${r} ${r} 0 0 1 ${p2[0]} ${p2[1]}Z" fill="#D9822B" fill-opacity="0.2"/><circle cx="${cx}" cy="${cy}" r="10" fill="#D9822B" stroke="${css('sheet')}" stroke-width="2"/><text x="${cx}" y="${cy+3.5}" text-anchor="middle" font-size="10" font-family="IBM Plex Mono, monospace" fill="${css('sheet')}">${i+1}</text></g>`; });
     svg.innerHTML = o;
   }
   window.planSetMode = m => { mode = m; draw(); };
-  draw();
+  draw(); window.redrawPlan = draw;
   // drag & rotate in the plan
   const L=window.LAYOUT, gById=Object.fromEntries(L.groups.map(g=>[g.id,g]));
   const pt=e=>{ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; const q=p.matrixTransform(svg.getScreenCTM().inverse()); return {x:q.x/S-ox, y:q.y/S-oy}; };
@@ -279,7 +306,7 @@ window.HOUSE = {
   let drag=null, lastTap={};
   function select(id){ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); window.selectFurn && window.selectFurn(id); window.onFurnSelect && window.onFurnSelect(id); }
   window.planSelect=id=>{ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); };
-  svg.addEventListener('pointerdown',e=>{ const n=e.target.closest('g[data-g]'); if(!n){ select(null); return; } const g=gById[n.dataset.g]; if(g.fixed) return;
+  svg.addEventListener('pointerdown',e=>{ const ph=e.target.closest('g[data-ph]'); if(ph){ window.openPhoto(+ph.dataset.ph); return; } const n=e.target.closest('g[data-g]'); if(!n){ select(null); return; } const g=gById[n.dataset.g]; if(g.fixed) return;
     const now=Date.now(); if(lastTap.id===g.id && now-lastTap.t<400){ lastTap={}; window.rotateFurn(g.id); e.preventDefault(); return; } lastTap={id:g.id,t:now};
     select(g.id); const v=L.get(g.id), p=pt(e); drag={g,v0:{...v},p0:p,moved:false}; svg.setPointerCapture(e.pointerId); e.preventDefault(); });
   svg.addEventListener('pointermove',e=>{ if(!drag) return; const p=pt(e), {g,v0}=drag;
@@ -539,5 +566,24 @@ pair('furn-on','furn-off',()=>{furnRoot.visible=true;},()=>{furnRoot.visible=fal
       rows=snap.docs.map(d=>({id:d.id,...d.data()}));
       list.innerHTML='<option value="">已存的配置</option>'+rows.map(r=>`<option value="${r.id}">${String(r.name||'未命名').replace(/[<&"]/g,c=>({'<':'&lt;','&':'&amp;','"':'&quot;'}[c]))}</option>`).join('');
       list.value=rows.some(r=>r.id===keep)?keep:''; list.disabled=!rows.length; del.disabled=!list.value; }, ()=>{ col=null; }); })();
+})();
+</script>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="實景照片">
+  <img id="lb-img" alt="">
+  <div class="cap" id="lb-cap"></div>
+  <div class="nav"><button id="lb-prev">‹ 上一張</button><button id="lb-close">關閉</button><button id="lb-next">下一張 ›</button></div>
+</div>
+<script>
+(function(){
+  const P=window.HOUSE.photos, lb=document.getElementById('lb'), img=document.getElementById('lb-img'), cap=document.getElementById('lb-cap'); let i=0;
+  const show=k=>{ i=(k+P.length)%P.length; img.src=P[i][0]; img.alt=P[i][1]; cap.textContent=`${i+1} / ${P.length}　${P[i][1]}（房仲照片，廣角）`; };
+  window.openPhoto=k=>{ show(k); lb.classList.add('on'); document.getElementById('lb-close').focus(); };
+  const close=()=>lb.classList.remove('on');
+  document.getElementById('lb-prev').onclick=()=>show(i-1); document.getElementById('lb-next').onclick=()=>show(i+1); document.getElementById('lb-close').onclick=close;
+  lb.addEventListener('click',e=>{ if(e.target===lb) close(); });
+  document.addEventListener('keydown',e=>{ if(!lb.classList.contains('on')) return; if(e.key==='Escape') close(); else if(e.key==='ArrowLeft') show(i-1); else if(e.key==='ArrowRight') show(i+1); });
+  const tg=document.getElementById('ph-toggle');
+  tg.onclick=()=>{ window.showPhotos=tg.getAttribute('aria-pressed')!=='true'; tg.setAttribute('aria-pressed',String(window.showPhotos)); window.redrawPlan && window.redrawPlan(); };
 })();
 </script>
