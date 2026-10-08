@@ -1,4 +1,4 @@
-<title>羅馬山莊 規劃圖</title>
+<title>我家</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -50,13 +50,16 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
 .editbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;border-top:1px solid var(--line)}
 .editbar button{font-size:13px;padding:4px 10px}
 .editbar .sel-name{font-size:13px;color:var(--muted);margin-right:auto}
-.editbar button:disabled{opacity:.45;cursor:default}
+.editbar button:disabled,.editbar select:disabled{opacity:.45;cursor:default}
+.editbar select{font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--sheet);color:var(--ink);max-width:220px}
+.editbar .save-msg{font-size:12px;color:var(--accent);width:100%;text-align:right;min-height:1em}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 
 <div class="wrap">
   <header>
     <div>
-      <h1>羅馬山莊 退休宅規劃圖</h1>
+      <h1>我家</h1>
       <div class="facts"><span>新店區五峰路</span><span>建物 22.23 坪</span><span>主＋陽 18.89 坪 ≈ 62.4 m²</span><span>3F / 5F・有電梯</span><span>落地窗朝西北偏西</span><span>1 房 2 廳 1 衛</span></div>
     </div>
     <div class="controls" role="group" aria-label="餐廳壁床">
@@ -70,10 +73,13 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
 
   <div class="panel">
     <div class="editbar" role="group" aria-label="家具擺放">
-      <span class="sel-name" id="sel-name">在平面圖或 3D 圖上直接拖曳家具；點一下選取，按「旋轉 90°」或連點兩下轉向</span>
+      <span class="sel-name" id="sel-name">拖曳家具調整位置；點一下選取，按「旋轉 90°」或連點兩下轉向；滿意就按「儲存配置」</span>
       <button id="rot" disabled>旋轉 90°</button>
-      <button id="copy-layout">複製我的配置</button>
+      <button id="save-layout">儲存配置</button>
+      <label class="saved"><span class="vh">已存的配置</span><select id="saved-list" disabled><option value="">已存的配置</option></select></label>
+      <button id="del-layout" disabled>刪除</button>
       <button id="reset-layout">還原預設</button>
+      <span class="save-msg" id="save-msg" role="status"></span>
     </div>
   </div>
 
@@ -187,6 +193,7 @@ window.HOUSE = {
   window.LAYOUT={ groups, get:id=>st[id]||{dx:0,dy:0,r:0},
     set(id,v,save){ st[id]=v; subs.forEach(f=>f(id,v)); if(save){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} } },
     reset(){ st={}; try{ localStorage.removeItem(KEY); }catch(e){} groups.forEach(g=>subs.forEach(f=>f(g.id,{dx:0,dy:0,r:0}))); },
+    apply(o){ st=JSON.parse(JSON.stringify(o||{})); try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} groups.forEach(g=>{ const v=st[g.id]||{dx:0,dy:0,r:0}; subs.forEach(f=>f(g.id,v)); }); },
     dump(){ const o={}; groups.forEach(g=>{ const v=st[g.id]; if(v&&(v.dx||v.dy||v.r)) o[g.id]=v; }); return o; },
     on(f){ subs.push(f); } };
 })();
@@ -470,8 +477,25 @@ pair('furn-on','furn-off',()=>{furnRoot.visible=true;},()=>{furnRoot.visible=fal
   rot.onclick=()=>{ if(cur) window.rotateFurn(cur); };
   document.addEventListener('keydown',e=>{ if(cur && (e.key==='r'||e.key==='R') && !e.target.closest('input,textarea')) window.rotateFurn(cur); });
   document.getElementById('reset-layout').onclick=()=>{ L.reset(); };
-  document.getElementById('copy-layout').onclick=async e=>{ const t=JSON.stringify(L.dump()); const b=e.currentTarget;
-    try{ await navigator.clipboard.writeText(t); b.textContent='已複製，貼給 Claude 就能定案'; }catch(err){ prompt('複製這段文字貼給 Claude：',t); }
-    setTimeout(()=>b.textContent='複製我的配置',2500); };
+  // saved layouts: kept in the artifact's database so they survive device changes and Claude can read them
+  const saveBtn=document.getElementById('save-layout'), list=document.getElementById('saved-list'), del=document.getElementById('del-layout'), msg=document.getElementById('save-msg');
+  const say=t=>{ msg.textContent=t; clearTimeout(say.t); say.t=setTimeout(()=>msg.textContent='',4000); };
+  let col=null, rows=[];
+  const stamp=()=>{ const d=new Date(), z=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}/${d.getDate()} ${z(d.getHours())}:${z(d.getMinutes())}`; };
+  saveBtn.onclick=async()=>{ const name=(prompt('幫這個配置取個名字：',`我的配置 ${stamp()}`)||'').trim(); if(!name) return;
+    if(!col){ say('這個畫面連不到雲端，配置只存在這台裝置的瀏覽器。'); return; }
+    saveBtn.disabled=true;
+    try{ const ref=await col.add({name, layout:L.dump(), savedAt:new Date().toISOString()}); list.value=ref.id; del.disabled=false; say(`已儲存「${name}」，換裝置也看得到。`); }
+    catch(e){ say(e&&e.code==='quota_exceeded'?'存的配置太多了，先刪掉幾個再存。':'儲存失敗，請稍後再試。'); }
+    saveBtn.disabled=false; };
+  list.onchange=()=>{ const r=rows.find(x=>x.id===list.value); del.disabled=!r; if(r){ L.apply(r.layout); say(`已套用「${r.name}」`); } };
+  del.onclick=async()=>{ const r=rows.find(x=>x.id===list.value); if(!r||!confirm(`刪除「${r.name}」？`)) return;
+    try{ await col.doc(r.id).delete(); list.value=''; del.disabled=true; say('已刪除'); }catch(e){ say('刪除失敗，請稍後再試。'); } };
+  (async()=>{ const db = window.claude && window.claude.use ? await window.claude.use('db') : null; if(!db) return;
+    col=db.collection('layouts');
+    col.orderBy('savedAt','desc').limit(50).onSnapshot(snap=>{ const keep=list.value;
+      rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+      list.innerHTML='<option value="">已存的配置</option>'+rows.map(r=>`<option value="${r.id}">${String(r.name||'未命名').replace(/[<&"]/g,c=>({'<':'&lt;','&':'&amp;','"':'&quot;'}[c]))}</option>`).join('');
+      list.value=rows.some(r=>r.id===keep)?keep:''; list.disabled=!rows.length; del.disabled=!list.value; }, ()=>{ col=null; }); })();
 })();
 </script>
