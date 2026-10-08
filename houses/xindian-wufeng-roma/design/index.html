@@ -150,7 +150,7 @@ window.HOUSE = {
     ["爐台",0,3.35,0.6,1.4,0.88,"#CFC6B8"],
     ["冰箱",0.02,4.77,0.72,0.6,1.8,"#B8BEC2"],
     ["洗衣機",0.1,0.1,0.65,0.65,0.85,"#E2E6E8",6],
-    ["餐桌",2.62,6.12,1.2,0.75,0.75,"#8C8781",5],
+    ["餐桌",2.62,6.12,1.2,0.75,0.75,"#C9A27A",5],
     ["椅",2.92,5.6,0.44,0.44,0.45,"#7A5E43"],["",2.92,5.6,0.44,0.06,0.85,"#7A5E43"],
     ["椅",2.92,6.95,0.44,0.44,0.45,"#7A5E43"],["",2.92,7.33,0.44,0.06,0.85,"#7A5E43"],
     ["面盆",0.1,5.55,0.55,0.45,0.85,"#F4F5F5"],
@@ -384,9 +384,9 @@ el.addEventListener('pointermove',e=>{ if(!drag3) return; e.stopPropagation(); t
   const sn=v=>+(Math.round(v/0.05)*0.05).toFixed(2); LAY.set(drag3.id,{dx:sn(drag3.v0.dx+hitP.x-drag3.x0), dy:sn(drag3.v0.dy+hitP.z-drag3.z0), r:drag3.v0.r},false); },true);
 el.addEventListener('pointerup',e=>{ if(!drag3) return; e.stopPropagation(); LAY.set(drag3.id,LAY.get(drag3.id),true); drag3=null; },true);
 // fabric sofa: back against the wall on the +x side, seat facing -x
-// black solid-wood dining table: soft oval-cornered top, splayed round legs
+// natural solid-wood dining table: soft oval-cornered top, splayed round legs
 function buildTable(x,y,w,d,h,parent){
-  const g=new THREE.Group(), blk=new THREE.MeshStandardMaterial({color:0x2B2A28, roughness:0.55}), T=0.03, r=Math.min(w,d)*0.42;
+  const g=new THREE.Group(), blk=new THREE.MeshStandardMaterial({color:0xC9A27A, roughness:0.6}), T=0.03, r=Math.min(w,d)*0.42;
   const sh=new THREE.Shape(), hw=w/2, hd=d/2;
   sh.moveTo(-hw+r,-hd); sh.lineTo(hw-r,-hd); sh.quadraticCurveTo(hw,-hd,hw,-hd+r); sh.lineTo(hw,hd-r); sh.quadraticCurveTo(hw,hd,hw-r,hd);
   sh.lineTo(-hw+r,hd); sh.quadraticCurveTo(-hw,hd,-hw,hd-r); sh.lineTo(-hw,-hd+r); sh.quadraticCurveTo(-hw,-hd,-hw+r,-hd);
