@@ -163,7 +163,7 @@ window.HOUSE = {
     ["壁床（放下）",4.005,3.86,2.05,1.0,0.5,"#E9E4DA",1,"open"],
     ["壁床櫃",3.95,3.66,2.16,0.2,1.27,"#C7B79F",null,"open"],
     ["人 158cm",5.0,5.41,0.3,0.48,1.58,"#2C6E6A"],
-    ["美短",4.55,9.0,0.22,0.6,0.3,"#A9AEB2"],
+    ["美短",4.5,9.1,0.3,0.32,0.38,"#F4F3EF"],
     ["鞋櫃＋穿鞋椅",3.7,11.5,1.3,0.38,1.0,"#B89A74",4],
     ["餐邊櫃",5.75,5.9,0.45,1.2,1.8,"#C8A27A"],
   ],
@@ -414,22 +414,30 @@ function buildChair(x,y,w,d,backAtMax,parent){
   back.position.set(0,0.72,-hd+R-0.03); back.castShadow=true; g.add(back);
   g.position.set(x+w/2,0,y+d/2); if(backAtMax) g.rotation.y=Math.PI; parent.add(g);
 }
-// American shorthair (silver tabby), sitting-loaf pose, head toward -z
+// the cat from Tina's photo: white, grey tabby cap, ringed grey tail, brown collar; sitting, facing -z
 function buildCat(x,y,w,d,parent){
-  const g=new THREE.Group(), fur=new THREE.MeshStandardMaterial({color:0xB4B9BC, roughness:1}), stripe=new THREE.MeshStandardMaterial({color:0x3E4246, roughness:1}),
-    pink=mat(0xD9A0A0), eye=new THREE.MeshStandardMaterial({color:0x8FB33A, roughness:0.3});
-  const sph=(r,sx,sy,sz,m,px,py,pz)=>{ const o=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),m); o.scale.set(sx,sy,sz); o.position.set(px,py,pz); o.castShadow=true; g.add(o); return o; };
-  sph(0.1,1,0.95,1.7,fur,0,0.11,0.05);                                  // body
-  [-0.04,0.04,0.12].forEach(z=>{ const t=new THREE.Mesh(new THREE.TorusGeometry(0.093,0.006,6,24,Math.PI),stripe); t.scale.set(1,0.98,1); t.position.set(0,0.105,z); t.castShadow=false; g.add(t); }); // tabby bands
-  sph(0.075,1.1,1,1,fur,0,0.2,-0.13);                                   // head
-  sph(0.03,1.3,0.8,1,fur,0,0.18,-0.195);                                // muzzle
-  sph(0.008,1,1,1,pink,0,0.19,-0.225);                                  // nose
-  [-1,1].forEach(sd=>{ sph(0.012,1,1,0.6,eye,sd*0.03,0.215,-0.198);
-    const e=new THREE.Mesh(new THREE.ConeGeometry(0.03,0.055,4),fur); e.position.set(sd*0.045,0.27,-0.13); e.rotation.z=-sd*0.25; g.add(e);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(0.004,0.04,0.004),stripe); m.position.set(sd*0.015,0.25,-0.2); g.add(m); });   // forehead "M"
-  sph(0.03,1,0.7,1.6,fur,-0.05,0.03,-0.08); sph(0.03,1,0.7,1.6,fur,0.05,0.03,-0.08); // front paws
-  const tail=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.022,8,20,Math.PI*0.9),fur); tail.rotation.x=Math.PI/2; tail.position.set(0,0.03,0.12); tail.castShadow=true; g.add(tail);
-  const tip=new THREE.Mesh(new THREE.SphereGeometry(0.023,10,8),stripe); tip.position.set(-0.1*Math.cos(Math.PI*0.9),0.03,0.12+0.1*Math.sin(Math.PI*0.9)); g.add(tip);
+  const g=new THREE.Group(), M=(c,r=1)=>new THREE.MeshStandardMaterial({color:c, roughness:r}),
+    wh=M(0xF4F3EF), gr=M(0xA9AEB3), dk=M(0x3C3F43), pink=M(0xE6A9AE), eye=M(0xB08A2E,0.3), pupil=M(0x1A1A1A,0.3), col=M(0x4A2A22,0.5);
+  const sph=(r,sx,sy,sz,m,px,py,pz,par=g)=>{ const o=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),m); o.scale.set(sx,sy,sz); o.position.set(px,py,pz); o.castShadow=true; par.add(o); return o; };
+  sph(0.085,1.05,0.75,1.15,wh,0,0.065,0.03);                       // haunches
+  sph(0.07,1,1.6,0.95,wh,0,0.15,-0.01);                            // upright chest/body
+  [-1,1].forEach(sd=>{ const l=new THREE.Mesh(new THREE.CylinderGeometry(0.017,0.02,0.15,10),wh); l.position.set(sd*0.03,0.075,-0.05); g.add(l);
+    sph(0.022,1,0.6,1.3,wh,sd*0.032,0.012,-0.068); });             // front legs + paws
+  const col1=new THREE.Mesh(new THREE.TorusGeometry(0.05,0.009,8,24),col); col1.rotation.x=Math.PI/2+0.35; col1.position.set(0,0.262,-0.04); g.add(col1);
+  const head=new THREE.Group(); head.position.set(0,0.31,-0.035); g.add(head);
+  sph(0.07,1.12,0.98,1,wh,0,0,0,head);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(0.0715,24,12,Math.PI*0.15,Math.PI*1.7,0,Math.PI*0.32),gr); cap.scale.set(1.12,0.98,1); cap.rotation.y=Math.PI; head.add(cap); // grey cap toward front-top
+  [-0.012,0,0.012].forEach(dx=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(0.005,0.035,0.004),dk); m.position.set(dx,0.045,-0.058); m.rotation.x=-0.6; head.add(m); }); // forehead stripes
+  [-1,1].forEach(sd=>{ const e=new THREE.Mesh(new THREE.ConeGeometry(0.026,0.05,4),gr); e.position.set(sd*0.045,0.065,0); e.rotation.z=-sd*0.35; head.add(e);
+    const ei=new THREE.Mesh(new THREE.ConeGeometry(0.016,0.035,4),pink); ei.position.set(sd*0.044,0.06,-0.008); ei.rotation.z=-sd*0.35; head.add(ei);
+    sph(0.013,1,1,0.55,eye,sd*0.028,0.012,-0.063,head); sph(0.006,0.6,1,0.5,pupil,sd*0.028,0.012,-0.07,head); });
+  sph(0.028,1.3,0.8,0.9,wh,0,-0.025,-0.058,head);                  // muzzle
+  sph(0.007,1.2,0.8,1,pink,0,-0.012,-0.083,head);                  // nose
+  // tail lying on the floor, curling to the right, grey with dark rings
+  const tp=new THREE.CatmullRomCurve3([new THREE.Vector3(0.03,0.02,0.1),new THREE.Vector3(0.1,0.015,0.08),new THREE.Vector3(0.15,0.015,0.0),new THREE.Vector3(0.17,0.015,-0.08)]);
+  const tail=new THREE.Mesh(new THREE.TubeGeometry(tp,24,0.016,8,false),gr); tail.castShadow=true; g.add(tail);
+  [0.35,0.5,0.65,0.8].forEach(t=>{ const pt=tp.getPointAt(t), tg=tp.getTangentAt(t), r=new THREE.Mesh(new THREE.TorusGeometry(0.0165,0.005,6,16),dk); r.position.copy(pt); r.lookAt(pt.clone().add(tg)); g.add(r); });
+  sph(0.018,1,1,1.4,dk,0.17,0.015,-0.085);                         // dark tail tip
   g.position.set(x+w/2,0,y+d/2); parent.add(g);
 }
 function buildSofa(x,y,w,d,parent){
