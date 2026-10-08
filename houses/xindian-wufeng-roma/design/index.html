@@ -150,7 +150,7 @@ window.HOUSE = {
     ["爐台",0,3.35,0.6,1.4,0.88,"#CFC6B8"],
     ["冰箱",0.02,4.77,0.72,0.6,1.8,"#B8BEC2"],
     ["洗衣機",0.1,0.1,0.65,0.65,0.85,"#E2E6E8",6],
-    ["餐桌",2.62,6.12,1.2,0.75,0.75,"#A9845A",5],
+    ["餐桌",2.62,6.12,1.2,0.75,0.75,"#8C8781",5],
     ["椅",2.92,5.6,0.44,0.44,0.45,"#7A5E43"],["",2.92,5.6,0.44,0.06,0.85,"#7A5E43"],
     ["椅",2.92,6.95,0.44,0.44,0.45,"#7A5E43"],["",2.92,7.33,0.44,0.06,0.85,"#7A5E43"],
     ["面盆",0.1,5.55,0.55,0.45,0.85,"#F4F5F5"],
@@ -363,7 +363,7 @@ const LAY=window.LAYOUT, pivots={}, modal=[];
 LAY.groups.forEach(g=>{ const pv=new THREE.Group(), inner=new THREE.Group(); inner.position.set(-g.cx,0,-g.cy); pv.add(inner); furnRoot.add(pv);
   pv.userData.gid=g.id; pv.userData.fixed=g.fixed; pivots[g.id]=pv;
   g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m,z0]=H.furn[i]; const holder=new THREE.Group(); inner.add(holder); if(m){ holder.userData.m=m; modal.push(holder); holder.visible=m==='closed'; }
-    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } if(n==='人 158cm'){ buildPerson(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
+    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } if(n==='人 158cm'){ buildPerson(x,y,w,d,holder); return; } if(n==='餐桌'){ buildTable(x,y,w,d,h,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
     if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
   place(g.id, LAY.get(g.id)); });
 function place(id,v){ const g=LAY.groups.find(q=>q.id===id), pv=pivots[id]; pv.position.set(g.cx+v.dx,0,g.cy+v.dy); pv.rotation.y=-v.r*Math.PI/180; }
@@ -384,6 +384,20 @@ el.addEventListener('pointermove',e=>{ if(!drag3) return; e.stopPropagation(); t
   const sn=v=>+(Math.round(v/0.05)*0.05).toFixed(2); LAY.set(drag3.id,{dx:sn(drag3.v0.dx+hitP.x-drag3.x0), dy:sn(drag3.v0.dy+hitP.z-drag3.z0), r:drag3.v0.r},false); },true);
 el.addEventListener('pointerup',e=>{ if(!drag3) return; e.stopPropagation(); LAY.set(drag3.id,LAY.get(drag3.id),true); drag3=null; },true);
 // fabric sofa: back against the wall on the +x side, seat facing -x
+// black solid-wood dining table: soft oval-cornered top, splayed round legs
+function buildTable(x,y,w,d,h,parent){
+  const g=new THREE.Group(), blk=new THREE.MeshStandardMaterial({color:0x2B2A28, roughness:0.55}), T=0.03, r=Math.min(w,d)*0.42;
+  const sh=new THREE.Shape(), hw=w/2, hd=d/2;
+  sh.moveTo(-hw+r,-hd); sh.lineTo(hw-r,-hd); sh.quadraticCurveTo(hw,-hd,hw,-hd+r); sh.lineTo(hw,hd-r); sh.quadraticCurveTo(hw,hd,hw-r,hd);
+  sh.lineTo(-hw+r,hd); sh.quadraticCurveTo(-hw,hd,-hw,hd-r); sh.lineTo(-hw,-hd+r); sh.quadraticCurveTo(-hw,-hd,-hw+r,-hd);
+  const top=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:T,bevelEnabled:true,bevelThickness:0.006,bevelSize:0.006,bevelSegments:2,curveSegments:16}),blk);
+  top.rotation.x=Math.PI/2; top.position.set(0,h,0); top.castShadow=top.receiveShadow=true; g.add(top);
+  const ap=new THREE.Mesh(new THREE.BoxGeometry(w-0.36,0.05,d-0.2),blk); ap.position.set(0,h-T-0.03,0); g.add(ap);   // apron
+  const legH=h-T, ix=hw-0.2, iz=hd-0.1;
+  [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([sx,sz])=>{ const o=new THREE.Mesh(new THREE.CylinderGeometry(0.026,0.017,legH+0.02,12),blk);
+    o.position.set(sx*(ix+0.04),legH/2,sz*(iz+0.02)); o.rotation.z=-sx*0.09; o.rotation.x=sz*0.05; o.castShadow=true; g.add(o); });
+  g.position.set(x+hw,0,y+hd); parent.add(g);
+}
 function buildSofa(x,y,w,d,parent){
   const g=new THREE.Group(), fab=new THREE.MeshStandardMaterial({color:0x9DA3A9, roughness:0.95}), wood=mat(0xC89B6D);
   const rb=(bx,by,bz,sx,sy,sz,r,m)=>{ const geo=new THREE.BoxGeometry(sx,sy,sz,2,2,2); const o=new THREE.Mesh(geo,m); o.position.set(bx,by,bz); o.castShadow=o.receiveShadow=true; g.add(o); return o; };
