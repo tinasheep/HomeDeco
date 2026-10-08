@@ -157,6 +157,7 @@ window.HOUSE = {
     ["壁床（放下）",4.02,3.85,2.0,1.06,0.5,"#E9E4DA",1,"open"],
     ["壁床櫃",3.95,3.66,2.15,0.2,1.3,"#C7B79F",null,"open"],
     ["鞋櫃＋穿鞋椅",3.7,11.5,1.3,0.38,1.0,"#B89A74",4],
+    ["餐邊櫃",5.75,5.9,0.45,1.2,1.8,"#C8A27A"],
   ],
   curtain: [[3.8,3.66,3.8,5.05],[3.8,5.05,6.2,5.05]],
   keys: [
@@ -221,7 +222,7 @@ window.HOUSE = {
      g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m]=H.furn[i]; if(m && m!==mode) return;
       o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8" rx="2"/>`;
       if(w*S>40 && d*S>18) o+=`<text x="${X(x+w/2)}" y="${Y(y+d/2)+4}" text-anchor="middle" font-size="${w*S>80?11:9.5}" fill="#1E2A32">${n.length>8&&w*S<90?n.slice(0,5):n}</text>`;
-      else if(d*S>60 && w*S<12){ const tx=X(x+w)+12, ty=Y(y+d/2); o+=`<text x="${tx}" y="${ty}" transform="rotate(90 ${tx} ${ty})" text-anchor="middle" font-size="10" fill="${css('ink')}">${n}</text>`; }
+      else if(d*S>60 && w*S<40){ const tx=w*S<12?X(x+w)+12:X(x+w/2)-4, ty=Y(y+d/2); o+=`<text x="${tx}" y="${ty}" transform="rotate(90 ${tx} ${ty})" text-anchor="middle" font-size="10" fill="${css('ink')}">${n}</text>`; }
       if(k) o+=`<g><circle cx="${X(x)+2}" cy="${Y(y)+2}" r="9" fill="${css('accent')}"/><text x="${X(x)+2}" y="${Y(y)+6}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="${css('sheet')}">${k}</text></g>`;
      });
      o+=`</g>`;
@@ -353,7 +354,7 @@ const LAY=window.LAYOUT, pivots={}, modal=[];
 LAY.groups.forEach(g=>{ const pv=new THREE.Group(), inner=new THREE.Group(); inner.position.set(-g.cx,0,-g.cy); pv.add(inner); furnRoot.add(pv);
   pv.userData.gid=g.id; pv.userData.fixed=g.fixed; pivots[g.id]=pv;
   g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m,z0]=H.furn[i]; const holder=new THREE.Group(); inner.add(holder); if(m){ holder.userData.m=m; modal.push(holder); holder.visible=m==='closed'; }
-    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
+    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
     if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
   place(g.id, LAY.get(g.id)); });
 function place(id,v){ const g=LAY.groups.find(q=>q.id===id), pv=pivots[id]; pv.position.set(g.cx+v.dx,0,g.cy+v.dy); pv.rotation.y=-v.r*Math.PI/180; }
@@ -391,6 +392,30 @@ function buildSofa(x,y,w,d,parent){
   [arm+0.16, L-arm-0.16].forEach(cy=>{ const o=rb(D-0.36,legH+0.5,cy,0.12,0.3,0.3,0,fab); o.rotation.z=-0.25; o.rotation.x=(cy<L/2?1:-1)*0.12; }); // throw pillows
   g.position.set(x,0,y); parent.add(g);
 }
+// sideboard (wood, glass door, open cubby, black pegboard, door + 3 drawers): back on the +x wall, front faces -x
+function buildSideboard(x,y,w,d,parent){
+  const g=new THREE.Group(), wood=mat(0xC8A27A), dk=mat(0x9C7B57), peg=mat(0x2A2B2D), D=w, L=d, legH=0.12, t=0.02;
+  const b=(px,py,pz,sx,sy,sz,m)=>{ const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),m); o.position.set(px,py,pz); o.castShadow=o.receiveShadow=true; g.add(o); return o; };
+  [[0.05,0.05],[0.05,L-0.05],[D-0.05,0.05],[D-0.05,L-0.05]].forEach(([lx,lz])=>{ const o=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.012,legH,8),wood); o.position.set(lx,legH/2,lz); g.add(o); });
+  // lower cabinet 0.12–0.85
+  b(D/2,legH+0.365,L/2,D,0.73,L,wood);
+  b(0.004,legH+0.365,L*0.25,0.01,0.69,L/2-0.02,dk);                     // left door
+  [0,1,2].forEach(i=>b(0.004,legH+0.12+i*0.235,L*0.75,0.01,0.215,L/2-0.02,dk)); // 3 drawers
+  b(0.0,legH+0.365,L/2,0.012,0.69,0.012,peg);                           // divider line
+  // pegboard back panel 0.85–1.15 with a thin worktop
+  b(D-0.02,legH+0.88,L/2,0.02,0.3,L,peg);
+  b(D/2,legH+0.735,L/2,D,0.02,L,wood);
+  for(let i=1;i<12;i++) for(let j=1;j<3;j++){ const h=new THREE.Mesh(new THREE.SphereGeometry(0.007,6,6),mat(0x555555)); h.position.set(D-0.032,legH+0.73+j*0.1,i*L/12); g.add(h); }
+  b(D-0.02,legH+0.88,0.01,D*0+0.36,0.3,0.02,wood); b(D-0.02,legH+0.88,L-0.01,0.36,0.3,0.02,wood); // side cheeks
+  // upper cabinet 1.15–1.8, shallower (0.32)
+  const uD=0.32, ux=D-uD/2, top0=legH+1.03, uh=1.8-top0;
+  b(ux,top0+uh/2,L/2,uD,uh,L,wood);
+  b(D-uD-0.004,top0+uh/2,L/6,0.01,uh-0.04,L/3-0.02,dk);                 // wood door
+  const gl=b(D-uD-0.004,top0+uh/2,L/2,0.01,uh-0.04,L/3-0.02,new THREE.MeshStandardMaterial({color:0xBFD9DA,transparent:true,opacity:0.5,roughness:0.1})); // glass door
+  b(D-uD-0.004,top0+uh/2,5*L/6,0.012,uh-0.04,L/3-0.02,mat(0x6B5640)); // open cubby (dark interior)
+  b(D-uD+0.02,top0+uh/2,5*L/6,0.02,0.02,L/3-0.04,wood);                 // cubby shelf
+  g.position.set(x,0,y); parent.add(g);
+}
 // 158 cm reference figure in dining room
 (function(){
   const g=new THREE.Group(), skin=mat(0xE8C4A0), top=mat(0x2C6E6A), pants=mat(0x3A4750);
@@ -402,8 +427,8 @@ function buildSofa(x,y,w,d,parent){
   cyl(0.04,0.04,0.06,skin,0,1.33,0);
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.11,24,16),skin); head.scale.set(1,1.15,1); head.position.set(0,1.455,0); head.castShadow=true; g.add(head);
   // head top = 1.455 + 0.11*1.15 ≈ 1.58 m
-  g.position.set(5.65,0,5.85); g.rotation.y=-Math.PI/2; scene.add(g);
-  const d=document.createElement('div'); d.className='lbl'; d.textContent='158 cm'; const o=new CSS2DObject(d); o.position.set(5.65,1.75,5.85); scene.add(o);
+  g.position.set(5.15,0,5.65); g.rotation.y=-Math.PI/2; scene.add(g);
+  const d=document.createElement('div'); d.className='lbl'; d.textContent='158 cm'; const o=new CSS2DObject(d); o.position.set(5.15,1.75,5.65); scene.add(o);
 })();
 // curtain (open mode)
 H.curtain.forEach(([x1,y1,x2,y2])=>{ const horiz=y1===y2, len=Math.hypot(x2-x1,y2-y1);
