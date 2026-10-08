@@ -68,6 +68,15 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
 
   <p class="note">尺寸由好房網平面圖比例與「主建物＋陽台 18.89 坪」回推，誤差約 ±20 公分，房仲照片僅用來判斷門窗與設備位置。正式施工前需現場丈量。</p>
 
+  <div class="panel">
+    <div class="editbar" role="group" aria-label="家具擺放">
+      <span class="sel-name" id="sel-name">在平面圖或 3D 圖上直接拖曳家具；點一下選取，按「旋轉 90°」或連點兩下轉向</span>
+      <button id="rot" disabled>旋轉 90°</button>
+      <button id="copy-layout">複製我的配置</button>
+      <button id="reset-layout">還原預設</button>
+    </div>
+  </div>
+
   <div class="views">
     <section class="panel" aria-label="平面配置圖">
       <h2><span>平面配置圖</span><span style="font-family:var(--font-data)">1 格 = 1 m</span></h2>
@@ -88,14 +97,6 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
     </section>
   </div>
 
-  <div class="panel">
-    <div class="editbar" role="group" aria-label="家具擺放">
-      <span class="sel-name" id="sel-name">在平面圖或 3D 圖上直接拖曳家具；點一下選取，雙擊或按「旋轉」轉 90°</span>
-      <button id="rot" disabled>旋轉 90°</button>
-      <button id="copy-layout">複製我的配置</button>
-      <button id="reset-layout">還原預設</button>
-    </div>
-  </div>
 
   <section>
     <h3>規劃重點</h3>
@@ -263,15 +264,15 @@ window.HOUSE = {
   const L=window.LAYOUT, gById=Object.fromEntries(L.groups.map(g=>[g.id,g]));
   const pt=e=>{ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; const q=p.matrixTransform(svg.getScreenCTM().inverse()); return {x:q.x/S-ox, y:q.y/S-oy}; };
   const snap=v=>+(Math.round(v/0.05)*0.05).toFixed(2);
-  let drag=null;
-  function select(id){ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); window.selectFurn && window.selectFurn(id); }
+  let drag=null, lastTap={};
+  function select(id){ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); window.selectFurn && window.selectFurn(id); window.onFurnSelect && window.onFurnSelect(id); }
   window.planSelect=id=>{ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); };
   svg.addEventListener('pointerdown',e=>{ const n=e.target.closest('g[data-g]'); if(!n){ select(null); return; } const g=gById[n.dataset.g]; if(g.fixed) return;
+    const now=Date.now(); if(lastTap.id===g.id && now-lastTap.t<400){ lastTap={}; window.rotateFurn(g.id); e.preventDefault(); return; } lastTap={id:g.id,t:now};
     select(g.id); const v=L.get(g.id), p=pt(e); drag={g,v0:{...v},p0:p,moved:false}; svg.setPointerCapture(e.pointerId); e.preventDefault(); });
   svg.addEventListener('pointermove',e=>{ if(!drag) return; const p=pt(e), {g,v0}=drag;
     const v={dx:snap(v0.dx+p.x-drag.p0.x), dy:snap(v0.dy+p.y-drag.p0.y), r:v0.r}; drag.moved=true; L.set(g.id,v,false); });
   svg.addEventListener('pointerup',e=>{ if(!drag) return; L.set(drag.g.id,L.get(drag.g.id),true); drag=null; });
-  svg.addEventListener('dblclick',e=>{ const n=e.target.closest('g[data-g]'); if(n && !gById[n.dataset.g].fixed) window.rotateFurn(n.dataset.g); });
   L.on((id,v)=>{ const n=svg.querySelector(`g[data-g="${CSS.escape(id)}"]`); if(n) n.setAttribute('transform',tf(gById[id],v)); });
   const keys = document.getElementById('keys');
   H.keys.forEach(([t,d],i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="badge">${i+1}</span><div><b>${t}</b>${d}</div>`; keys.appendChild(li); });
@@ -442,6 +443,7 @@ pair('furn-on','furn-off',()=>{furnRoot.visible=true;},()=>{furnRoot.visible=fal
   window.onFurnSelect=id=>{ cur=id; rot.disabled=!id; name.textContent=id?`已選取：${id.replace(/#1$/,'').replace('#','')}（拖曳移動，或按旋轉）`:def; };
   const ps=window.planSelect; window.planSelect=id=>{ ps(id); window.onFurnSelect(id); };
   rot.onclick=()=>{ if(cur) window.rotateFurn(cur); };
+  document.addEventListener('keydown',e=>{ if(cur && (e.key==='r'||e.key==='R') && !e.target.closest('input,textarea')) window.rotateFurn(cur); });
   document.getElementById('reset-layout').onclick=()=>{ L.reset(); };
   document.getElementById('copy-layout').onclick=async e=>{ const t=JSON.stringify(L.dump()); const b=e.currentTarget;
     try{ await navigator.clipboard.writeText(t); b.textContent='已複製，貼給 Claude 就能定案'; }catch(err){ prompt('複製這段文字貼給 Claude：',t); }
