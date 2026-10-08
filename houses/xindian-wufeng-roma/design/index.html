@@ -43,6 +43,14 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .keys b{display:block;font-weight:700}
 .badge{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--sheet);font-family:var(--font-data);font-size:12px;display:grid;place-items:center;margin-top:2px}
 h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
+#plan{touch-action:none;user-select:none}
+#plan g.mv{cursor:grab}
+#plan g.mv:hover rect{stroke:var(--accent);stroke-width:1.6}
+#plan g.sel rect{stroke:var(--accent);stroke-width:2.4}
+.editbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;border-top:1px solid var(--line)}
+.editbar button{font-size:13px;padding:4px 10px}
+.editbar .sel-name{font-size:13px;color:var(--muted);margin-right:auto}
+.editbar button:disabled{opacity:.45;cursor:default}
 </style>
 
 <div class="wrap">
@@ -76,8 +84,17 @@ h3{font-family:var(--font-display);font-size:20px;margin:0 0 4px}
         <button id="furn-off" aria-pressed="false">隱藏</button>
       </div>
       <div id="three"></div>
-      <div class="hint">拖曳旋轉・滾輪或雙指縮放・右鍵平移</div>
+      <div class="hint">拖曳家具可移動・拖曳空白處旋轉視角・滾輪或雙指縮放・右鍵平移</div>
     </section>
+  </div>
+
+  <div class="panel">
+    <div class="editbar" role="group" aria-label="家具擺放">
+      <span class="sel-name" id="sel-name">在平面圖或 3D 圖上直接拖曳家具；點一下選取，雙擊或按「旋轉」轉 90°</span>
+      <button id="rot" disabled>旋轉 90°</button>
+      <button id="copy-layout">複製我的配置</button>
+      <button id="reset-layout">還原預設</button>
+    </div>
   </div>
 
   <section>
@@ -150,6 +167,27 @@ window.HOUSE = {
     ["洗衣機移到後陽台","廚房牆上外露的給排水管改接到後陽台，增建窗加強通風、搭配除濕。"],
   ],
 };
+// ---------- movable furniture: groups + per-viewer layout ----------
+(function(){
+  const H=window.HOUSE, FIXED=['流理台・水槽','爐台','面盆','馬桶','浴缸（保留）','扶手'], BED=['橫掀壁床櫃 3.5尺','壁床（放下）','壁床櫃'];
+  const groups=[], byName={};
+  H.furn.forEach((f,i)=>{ const n=f[0], prev=groups[groups.length-1];
+    if(n==='' && prev && prev.name==='椅' && prev.idx.length===1 && H.furn[i-1][0]==='椅'){ prev.idx.push(i); return; }
+    if(BED.includes(n)){ if(!byName.bed){ byName.bed={name:'壁床',idx:[]}; groups.push(byName.bed);} byName.bed.idx.push(i); return; }
+    groups.push({name:n||'書桌椅', idx:[i]}); });
+  const seen={};
+  groups.forEach(g=>{ seen[g.name]=(seen[g.name]||0)+1; g.id=g.name+'#'+seen[g.name]; g.fixed=FIXED.includes(g.name);
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; g.idx.forEach(i=>{ const [,x,y,w,d]=H.furn[i]; x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+w);y1=Math.max(y1,y+d); });
+    g.cx=(x0+x1)/2; g.cy=(y0+y1)/2; });
+  const KEY='roma-layout-v1'; let st={};
+  try{ st=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ st={}; }
+  const subs=[];
+  window.LAYOUT={ groups, get:id=>st[id]||{dx:0,dy:0,r:0},
+    set(id,v,save){ st[id]=v; subs.forEach(f=>f(id,v)); if(save){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} } },
+    reset(){ st={}; try{ localStorage.removeItem(KEY); }catch(e){} groups.forEach(g=>subs.forEach(f=>f(g.id,{dx:0,dy:0,r:0}))); },
+    dump(){ const o={}; groups.forEach(g=>{ const v=st[g.id]; if(v&&(v.dx||v.dy||v.r)) o[g.id]=v; }); return o; },
+    on(f){ subs.push(f); } };
+})();
 </script>
 
 <script>
@@ -160,8 +198,9 @@ window.HOUSE = {
   const svg = document.getElementById('plan');
   svg.setAttribute('viewBox', `0 0 ${W} ${Ht}`);
   const X = v => (v+ox)*S, Y = v => (v+oy)*S;
-  let mode = 'closed';
+  let mode = 'closed', sel = null;
   const css = n => `var(--${n})`;
+  const tf = (g,v) => `translate(${v.dx*S} ${v.dy*S}) rotate(${v.r} ${X(g.cx)} ${Y(g.cy)})`;
   function draw(){
     let o = '';
     o += `<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="${css('line')}" stroke-width="2"/></pattern></defs>`;
@@ -176,11 +215,15 @@ window.HOUSE = {
     // curtain
     if(mode==='open') H.curtain.forEach(c=>o+=`<line x1="${X(c[0])}" y1="${Y(c[1])}" x2="${X(c[2])}" y2="${Y(c[3])}" stroke="${css('accent')}" stroke-width="2.5" stroke-dasharray="6 4"/>`);
     // furniture
-    H.furn.forEach(f=>{ const [n,x,y,w,d,h,c,k,m]=f; if(m && m!==mode) return;
+    window.LAYOUT.groups.forEach(g=>{ const v=window.LAYOUT.get(g.id);
+     o+=`<g data-g="${g.id}" class="${g.fixed?'fx':'mv'}${g.id===sel?' sel':''}" transform="${tf(g,v)}">`;
+     g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m]=H.furn[i]; if(m && m!==mode) return;
       o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8" rx="2"/>`;
       if(w*S>40 && d*S>18) o+=`<text x="${X(x+w/2)}" y="${Y(y+d/2)+4}" text-anchor="middle" font-size="${w*S>80?11:9.5}" fill="#1E2A32">${n.length>8&&w*S<90?n.slice(0,5):n}</text>`;
       else if(d*S>60 && w*S<12){ const tx=X(x+w)+12, ty=Y(y+d/2); o+=`<text x="${tx}" y="${ty}" transform="rotate(90 ${tx} ${ty})" text-anchor="middle" font-size="10" fill="${css('ink')}">${n}</text>`; }
       if(k) o+=`<g><circle cx="${X(x)+2}" cy="${Y(y)+2}" r="9" fill="${css('accent')}"/><text x="${X(x)+2}" y="${Y(y)+6}" text-anchor="middle" font-size="11" font-family="IBM Plex Mono, monospace" fill="${css('sheet')}">${k}</text></g>`;
+     });
+     o+=`</g>`;
     });
     // walls
     H.walls.forEach(([x1,y1,x2,y2,t])=>{
@@ -216,6 +259,20 @@ window.HOUSE = {
   }
   window.planSetMode = m => { mode = m; draw(); };
   draw();
+  // drag & rotate in the plan
+  const L=window.LAYOUT, gById=Object.fromEntries(L.groups.map(g=>[g.id,g]));
+  const pt=e=>{ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; const q=p.matrixTransform(svg.getScreenCTM().inverse()); return {x:q.x/S-ox, y:q.y/S-oy}; };
+  const snap=v=>+(Math.round(v/0.05)*0.05).toFixed(2);
+  let drag=null;
+  function select(id){ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); window.selectFurn && window.selectFurn(id); }
+  window.planSelect=id=>{ sel=id; svg.querySelectorAll('g[data-g]').forEach(n=>n.classList.toggle('sel',n.dataset.g===id)); };
+  svg.addEventListener('pointerdown',e=>{ const n=e.target.closest('g[data-g]'); if(!n){ select(null); return; } const g=gById[n.dataset.g]; if(g.fixed) return;
+    select(g.id); const v=L.get(g.id), p=pt(e); drag={g,v0:{...v},p0:p,moved:false}; svg.setPointerCapture(e.pointerId); e.preventDefault(); });
+  svg.addEventListener('pointermove',e=>{ if(!drag) return; const p=pt(e), {g,v0}=drag;
+    const v={dx:snap(v0.dx+p.x-drag.p0.x), dy:snap(v0.dy+p.y-drag.p0.y), r:v0.r}; drag.moved=true; L.set(g.id,v,false); });
+  svg.addEventListener('pointerup',e=>{ if(!drag) return; L.set(drag.g.id,L.get(drag.g.id),true); drag=null; });
+  svg.addEventListener('dblclick',e=>{ const n=e.target.closest('g[data-g]'); if(n && !gById[n.dataset.g].fixed) window.rotateFurn(n.dataset.g); });
+  L.on((id,v)=>{ const n=svg.querySelector(`g[data-g="${CSS.escape(id)}"]`); if(n) n.setAttribute('transform',tf(gById[id],v)); });
   const keys = document.getElementById('keys');
   H.keys.forEach(([t,d],i)=>{ const li=document.createElement('li'); li.innerHTML=`<span class="badge">${i+1}</span><div><b>${t}</b>${d}</div>`; keys.appendChild(li); });
 })();
@@ -289,10 +346,32 @@ function buildWalls(WH){
 buildWalls(1.25);
 // furniture
 const furnRoot=new THREE.Group(); scene.add(furnRoot);
-const groups = {base:new THREE.Group(), closed:new THREE.Group(), open:new THREE.Group()};
-furnRoot.add(groups.base, groups.closed, groups.open); groups.open.visible=false;
-H.furn.forEach(([n,x,y,w,d,h,c,k,m,z0])=>{ if(n==='雙人沙發'){ buildSofa(x,y,w,d,groups[m||'base']); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,groups[m||'base']);
-  if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
+const groups = {open:new THREE.Group()};
+furnRoot.add(groups.open); groups.open.visible=false;
+const LAY=window.LAYOUT, pivots={}, modal=[];
+LAY.groups.forEach(g=>{ const pv=new THREE.Group(), inner=new THREE.Group(); inner.position.set(-g.cx,0,-g.cy); pv.add(inner); furnRoot.add(pv);
+  pv.userData.gid=g.id; pv.userData.fixed=g.fixed; pivots[g.id]=pv;
+  g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m,z0]=H.furn[i]; const holder=new THREE.Group(); inner.add(holder); if(m){ holder.userData.m=m; modal.push(holder); holder.visible=m==='closed'; }
+    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
+    if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
+  place(g.id, LAY.get(g.id)); });
+function place(id,v){ const g=LAY.groups.find(q=>q.id===id), pv=pivots[id]; pv.position.set(g.cx+v.dx,0,g.cy+v.dy); pv.rotation.y=-v.r*Math.PI/180; }
+LAY.on(place);
+// selection highlight + drag on the floor plane
+let selId=null; const selBox=new THREE.BoxHelper(undefined,0x2C6E6A); selBox.visible=false; scene.add(selBox);
+window.selectFurn=id=>{ selId=id; if(id&&pivots[id]){ selBox.setFromObject(pivots[id]); selBox.visible=true; } else selBox.visible=false; window.onFurnSelect && window.onFurnSelect(id); };
+LAY.on(id=>{ if(id===selId) selBox.setFromObject(pivots[id]); });
+const ray=new THREE.Raycaster(), floor=new THREE.Plane(new THREE.Vector3(0,1,0),0), ndc=new THREE.Vector2(), hitP=new THREE.Vector3();
+const toNdc=e=>{ const r=renderer.domElement.getBoundingClientRect(); ndc.set((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1); ray.setFromCamera(ndc,cam); };
+let drag3=null;
+el.addEventListener('pointerdown',e=>{ if(e.button!==0 || !furnRoot.visible) return; toNdc(e);
+  const hit=ray.intersectObjects(Object.values(pivots),true).find(h=>h.object.visible && (()=>{ let o=h.object; while(o){ if(o.visible===false) return false; o=o.parent; } return true; })());
+  if(!hit) return; let o=hit.object; while(o && !o.userData.gid) o=o.parent; if(!o || o.userData.fixed) return;
+  e.stopPropagation(); e.preventDefault(); const id=o.userData.gid; window.selectFurn(id); window.planSelect && window.planSelect(id);
+  floor.constant=0; ray.ray.intersectPlane(floor,hitP); drag3={id,v0:{...LAY.get(id)},x0:hitP.x,z0:hitP.z}; el.setPointerCapture(e.pointerId); },true);
+el.addEventListener('pointermove',e=>{ if(!drag3) return; e.stopPropagation(); toNdc(e); if(!ray.ray.intersectPlane(floor,hitP)) return;
+  const sn=v=>+(Math.round(v/0.05)*0.05).toFixed(2); LAY.set(drag3.id,{dx:sn(drag3.v0.dx+hitP.x-drag3.x0), dy:sn(drag3.v0.dy+hitP.z-drag3.z0), r:drag3.v0.r},false); },true);
+el.addEventListener('pointerup',e=>{ if(!drag3) return; e.stopPropagation(); LAY.set(drag3.id,LAY.get(drag3.id),true); drag3=null; },true);
 // fabric sofa: back against the wall on the +x side, seat facing -x
 function buildSofa(x,y,w,d,parent){
   const g=new THREE.Group(), fab=new THREE.MeshStandardMaterial({color:0x9DA3A9, roughness:0.95}), wood=mat(0xC89B6D);
@@ -342,7 +421,7 @@ new MutationObserver(bg).observe(document.documentElement,{attributes:true,attri
 function size(){ const w=el.clientWidth, h=Math.max(460, el.clientHeight); renderer.setSize(w,h); labels.setSize(w,h); cam.aspect=w/h; cam.updateProjectionMatrix(); }
 new ResizeObserver(size).observe(el); size();
 (function loop(){ requestAnimationFrame(loop); ctl.update(); renderer.render(scene,cam); labels.render(scene,cam); })();
-window.threeSetMode = m => { groups.open.visible = m==='open'; groups.closed.visible = m==='closed'; };
+window.threeSetMode = m => { groups.open.visible = m==='open'; modal.forEach(h=>h.visible=h.userData.m===m); if(selId) selBox.setFromObject(pivots[selId]); };
 const pair=(a,b,fa,fb)=>{ const A=document.getElementById(a), B=document.getElementById(b);
   A.onclick=()=>{A.setAttribute('aria-pressed',true);B.setAttribute('aria-pressed',false);fa();};
   B.onclick=()=>{B.setAttribute('aria-pressed',true);A.setAttribute('aria-pressed',false);fb();}; };
@@ -356,5 +435,16 @@ pair('furn-on','furn-off',()=>{furnRoot.visible=true;},()=>{furnRoot.visible=fal
   function set(m){ bc.setAttribute('aria-pressed', m==='closed'); bo.setAttribute('aria-pressed', m==='open');
     window.planSetMode && window.planSetMode(m); window.threeSetMode && window.threeSetMode(m); }
   bc.onclick=()=>set('closed'); bo.onclick=()=>set('open');
+})();
+(function(){
+  const L=window.LAYOUT, rot=document.getElementById('rot'), name=document.getElementById('sel-name'), def=name.textContent; let cur=null;
+  window.rotateFurn=id=>{ const v=L.get(id); L.set(id,{...v,r:(v.r+90)%360},true); };
+  window.onFurnSelect=id=>{ cur=id; rot.disabled=!id; name.textContent=id?`已選取：${id.replace(/#1$/,'').replace('#','')}（拖曳移動，或按旋轉）`:def; };
+  const ps=window.planSelect; window.planSelect=id=>{ ps(id); window.onFurnSelect(id); };
+  rot.onclick=()=>{ if(cur) window.rotateFurn(cur); };
+  document.getElementById('reset-layout').onclick=()=>{ L.reset(); };
+  document.getElementById('copy-layout').onclick=async e=>{ const t=JSON.stringify(L.dump()); const b=e.currentTarget;
+    try{ await navigator.clipboard.writeText(t); b.textContent='已複製，貼給 Claude 就能定案'; }catch(err){ prompt('複製這段文字貼給 Claude：',t); }
+    setTimeout(()=>b.textContent='複製我的配置',2500); };
 })();
 </script>
