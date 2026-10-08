@@ -151,8 +151,8 @@ window.HOUSE = {
     ["冰箱",0.02,4.77,0.72,0.6,1.8,"#B8BEC2"],
     ["洗衣機",0.1,0.1,0.65,0.65,0.85,"#E2E6E8",6],
     ["餐桌",2.62,6.12,1.2,0.75,0.75,"#C9A27A",5],
-    ["椅",2.92,5.6,0.44,0.44,0.45,"#7A5E43"],["",2.92,5.6,0.44,0.06,0.85,"#7A5E43"],
-    ["椅",2.92,6.95,0.44,0.44,0.45,"#7A5E43"],["",2.92,7.33,0.44,0.06,0.85,"#7A5E43"],
+    ["椅",2.92,5.6,0.44,0.44,0.45,"#B8B0A2"],["",2.92,5.6,0.44,0.06,0.85,"#D2AE84"],
+    ["椅",2.92,6.95,0.44,0.44,0.45,"#B8B0A2"],["",2.92,7.33,0.44,0.06,0.85,"#D2AE84"],
     ["面盆",0.1,5.55,0.55,0.45,0.85,"#F4F5F5"],
     ["馬桶",1.75,6.75,0.45,0.65,0.45,"#F4F5F5"],
     ["浴缸（保留）",0.05,6.6,1.5,0.75,0.55,"#E8EEF0",3],["扶手",2.5,6.8,0.04,0.6,0.04,"#8A9399",null,null,0.7],
@@ -163,6 +163,7 @@ window.HOUSE = {
     ["壁床（放下）",4.005,3.86,2.05,1.0,0.5,"#E9E4DA",1,"open"],
     ["壁床櫃",3.95,3.66,2.16,0.2,1.27,"#C7B79F",null,"open"],
     ["人 158cm",5.0,5.41,0.3,0.48,1.58,"#2C6E6A"],
+    ["美短",4.55,9.0,0.22,0.6,0.3,"#A9AEB2"],
     ["鞋櫃＋穿鞋椅",3.7,11.5,1.3,0.38,1.0,"#B89A74",4],
     ["餐邊櫃",5.75,5.9,0.45,1.2,1.8,"#C8A27A"],
   ],
@@ -228,6 +229,7 @@ window.HOUSE = {
     window.LAYOUT.groups.forEach(g=>{ const v=window.LAYOUT.get(g.id);
      o+=`<g data-g="${g.id}" class="${g.fixed?'fx':'mv'}${g.id===sel?' sel':''}" transform="${tf(g,v)}">`;
      g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m]=H.furn[i]; if(m && m!==mode) return;
+      if(n==='美短'){ o+=`<ellipse cx="${X(x+w/2)}" cy="${Y(y+d/2)}" rx="${w*S/2}" ry="${d*S/2}" fill="${c}" stroke="${css('ink')}" stroke-width="0.8"/><text x="${X(x+w)+4}" y="${Y(y+d/2)+4}" font-size="10" fill="${css('ink')}">美短</text>`; return; }
       if(n==='人 158cm'){ o+=`<ellipse cx="${X(x+w/2)}" cy="${Y(y+d/2)}" rx="${w*S/2}" ry="${d*S/2}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8"/><circle cx="${X(x+w/2)}" cy="${Y(y+d/2)}" r="${0.11*S}" fill="#E8C4A0" stroke="${css('ink')}" stroke-width="0.6"/><text x="${X(x+w)+4}" y="${Y(y+d/2)+4}" font-size="10" fill="${css('ink')}">158</text>`; return; }
       o+=`<rect x="${X(x)}" y="${Y(y)}" width="${w*S}" height="${d*S}" fill="${c}" fill-opacity="0.85" stroke="${css('ink')}" stroke-width="0.8" rx="2"/>`;
       if(w*S>40 && d*S>18) o+=`<text x="${X(x+w/2)}" y="${Y(y+d/2)+4}" text-anchor="middle" font-size="${w*S>80?11:9.5}" fill="#1E2A32">${n.length>8&&w*S<90?n.slice(0,5):n}</text>`;
@@ -363,7 +365,7 @@ const LAY=window.LAYOUT, pivots={}, modal=[];
 LAY.groups.forEach(g=>{ const pv=new THREE.Group(), inner=new THREE.Group(); inner.position.set(-g.cx,0,-g.cy); pv.add(inner); furnRoot.add(pv);
   pv.userData.gid=g.id; pv.userData.fixed=g.fixed; pivots[g.id]=pv;
   g.idx.forEach(i=>{ const [n,x,y,w,d,h,c,k,m,z0]=H.furn[i]; const holder=new THREE.Group(); inner.add(holder); if(m){ holder.userData.m=m; modal.push(holder); holder.visible=m==='closed'; }
-    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } if(n==='人 158cm'){ buildPerson(x,y,w,d,holder); return; } if(n==='餐桌'){ buildTable(x,y,w,d,h,holder); return; } const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
+    if(n==='雙人沙發'){ buildSofa(x,y,w,d,holder); return; } if(n==='餐邊櫃'){ buildSideboard(x,y,w,d,holder); return; } if(n==='人 158cm'){ buildPerson(x,y,w,d,holder); return; } if(n==='美短'){ buildCat(x,y,w,d,holder); return; } if(n==='餐桌'){ buildTable(x,y,w,d,h,holder); return; } if(n==='椅' && H.furn[i+1] && H.furn[i+1][0]===''){ buildChair(x,y,w,d,H.furn[i+1][2]>y+0.01,holder); return; } if(n==='' && i>0 && H.furn[i-1][0]==='椅') return; const o=box(x,y,w,d,h,new THREE.Color(c).getHex(),z0||0,holder);
     if(n==='衣櫃' && IMG.wardrobe){ const f=new THREE.MeshStandardMaterial({map:tex('wardrobe',w/1.4,1), roughness:0.4}); o.material=[o.material,o.material,o.material,o.material,o.material,f]; } });
   place(g.id, LAY.get(g.id)); });
 function place(id,v){ const g=LAY.groups.find(q=>q.id===id), pv=pivots[id]; pv.position.set(g.cx+v.dx,0,g.cy+v.dy); pv.rotation.y=-v.r*Math.PI/180; }
@@ -397,6 +399,38 @@ function buildTable(x,y,w,d,h,parent){
   [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([sx,sz])=>{ const o=new THREE.Mesh(new THREE.CylinderGeometry(0.026,0.017,legH+0.02,12),blk);
     o.position.set(sx*(ix+0.04),legH/2,sz*(iz+0.02)); o.rotation.z=-sx*0.09; o.rotation.x=sz*0.05; o.castShadow=true; g.add(o); });
   g.position.set(x+hw,0,y+hd); parent.add(g);
+}
+// dining chair: oak legs, greige upholstered seat + curved back
+function buildChair(x,y,w,d,backAtMax,parent){
+  const g=new THREE.Group(), oak=new THREE.MeshStandardMaterial({color:0xD2AE84, roughness:0.6}), fab=new THREE.MeshStandardMaterial({color:0xB8B0A2, roughness:0.95});
+  const hw=w/2-0.03, hd=d/2-0.03, SH=0.45;
+  const leg=(lx,lz,h,tilt)=>{ const o=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.014,h,10),oak); o.position.set(lx,h/2,lz); o.rotation.x=tilt; o.castShadow=true; g.add(o); };
+  leg(-hw,hd,SH-0.03,-0.06); leg(hw,hd,SH-0.03,-0.06);              // front legs
+  leg(-hw+0.01,-hd,0.80,0.08); leg(hw-0.01,-hd,0.80,0.08);          // rear legs run up into the back
+  const fr=new THREE.Mesh(new THREE.BoxGeometry(w-0.06,0.035,d-0.06),oak); fr.position.set(0,SH-0.05,0); g.add(fr);
+  const st=new THREE.Mesh(new THREE.BoxGeometry(w-0.08,0.015,0.015),oak); st.position.set(0,0.18,0); g.add(st);
+  const seat=new THREE.Mesh(new THREE.BoxGeometry(w-0.02,0.05,d-0.03,3,1,3),fab); seat.position.set(0,SH,0.005); seat.castShadow=true; g.add(seat);
+  const R=0.42, th=(w+0.02)/R, back=new THREE.Mesh(new THREE.CylinderGeometry(R,R,0.17,24,1,true,Math.PI-th/2,th),new THREE.MeshStandardMaterial({color:0xB8B0A2, roughness:0.95, side:THREE.DoubleSide}));
+  back.position.set(0,0.72,-hd+R-0.03); back.castShadow=true; g.add(back);
+  g.position.set(x+w/2,0,y+d/2); if(backAtMax) g.rotation.y=Math.PI; parent.add(g);
+}
+// American shorthair (silver tabby), sitting-loaf pose, head toward -z
+function buildCat(x,y,w,d,parent){
+  const g=new THREE.Group(), fur=new THREE.MeshStandardMaterial({color:0xB4B9BC, roughness:1}), stripe=new THREE.MeshStandardMaterial({color:0x3E4246, roughness:1}),
+    pink=mat(0xD9A0A0), eye=new THREE.MeshStandardMaterial({color:0x8FB33A, roughness:0.3});
+  const sph=(r,sx,sy,sz,m,px,py,pz)=>{ const o=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),m); o.scale.set(sx,sy,sz); o.position.set(px,py,pz); o.castShadow=true; g.add(o); return o; };
+  sph(0.1,1,0.95,1.7,fur,0,0.11,0.05);                                  // body
+  [-0.04,0.04,0.12].forEach(z=>{ const t=new THREE.Mesh(new THREE.TorusGeometry(0.093,0.006,6,24,Math.PI),stripe); t.scale.set(1,0.98,1); t.position.set(0,0.105,z); t.castShadow=false; g.add(t); }); // tabby bands
+  sph(0.075,1.1,1,1,fur,0,0.2,-0.13);                                   // head
+  sph(0.03,1.3,0.8,1,fur,0,0.18,-0.195);                                // muzzle
+  sph(0.008,1,1,1,pink,0,0.19,-0.225);                                  // nose
+  [-1,1].forEach(sd=>{ sph(0.012,1,1,0.6,eye,sd*0.03,0.215,-0.198);
+    const e=new THREE.Mesh(new THREE.ConeGeometry(0.03,0.055,4),fur); e.position.set(sd*0.045,0.27,-0.13); e.rotation.z=-sd*0.25; g.add(e);
+    const m=new THREE.Mesh(new THREE.BoxGeometry(0.004,0.04,0.004),stripe); m.position.set(sd*0.015,0.25,-0.2); g.add(m); });   // forehead "M"
+  sph(0.03,1,0.7,1.6,fur,-0.05,0.03,-0.08); sph(0.03,1,0.7,1.6,fur,0.05,0.03,-0.08); // front paws
+  const tail=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.022,8,20,Math.PI*0.9),fur); tail.rotation.x=Math.PI/2; tail.position.set(0,0.03,0.12); tail.castShadow=true; g.add(tail);
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(0.023,10,8),stripe); tip.position.set(-0.1*Math.cos(Math.PI*0.9),0.03,0.12+0.1*Math.sin(Math.PI*0.9)); g.add(tip);
+  g.position.set(x+w/2,0,y+d/2); parent.add(g);
 }
 function buildSofa(x,y,w,d,parent){
   const g=new THREE.Group(), fab=new THREE.MeshStandardMaterial({color:0x9DA3A9, roughness:0.95}), wood=mat(0xC89B6D);
